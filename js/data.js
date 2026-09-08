@@ -306,9 +306,34 @@ const Storage = {
     }
   },
 
+  getTeacherSchedules: () => {
+    try { return JSON.parse(localStorage.getItem('safezone_teacher_schedules') || '[]'); }
+    catch (error) { return []; }
+  },
+  saveTeacherSchedules: (schedules) => {
+    localStorage.setItem('safezone_teacher_schedules', JSON.stringify(schedules));
+  },
+
   getSessions: () => {
     const data = localStorage.getItem('safezone_sessions');
-    return data ? JSON.parse(data) : DEFAULT_SESSIONS;
+    const sessions = data ? JSON.parse(data) : DEFAULT_SESSIONS;
+    const teacherSessions = Storage.getTeacherSchedules().map(schedule => ({
+      id: `teacher-${schedule.id}`,
+      discipline: schedule.discipline,
+      title: schedule.title,
+      instructorId: schedule.instructor_id,
+      instructorName: schedule.instructor_name,
+      instructorAvatar: schedule.instructor_avatar,
+      date: schedule.class_date,
+      time: `${schedule.start_time.slice(0, 5)} - ${schedule.end_time.slice(0, 5)}`,
+      recurrence: 'once', recurrenceLabel: 'Programada por Profesores',
+      location: { name: schedule.location, address: schedule.location, zone: 'Bogotá D.C.' },
+      price: 10000, capacity: schedule.capacity, attendees: [], level: 'Todos los niveles',
+      requirements: ['Ropa deportiva', 'Hidratación'],
+      description: `Sesión programada por ${schedule.instructor_name}.`
+    }));
+    const ids = new Set(teacherSessions.map(session => session.id));
+    return [...teacherSessions, ...sessions.filter(session => !ids.has(session.id))];
   },
   saveSessions: (sessions) => {
     localStorage.setItem('safezone_sessions', JSON.stringify(sessions));
