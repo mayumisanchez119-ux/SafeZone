@@ -8,11 +8,17 @@ const App = {
 
   init: async () => {
     await Storage.initialize();
+    try {
+      Storage.saveTeacherSchedules(await SafeZoneCloud.fetchTeacherSchedules());
+    } catch (error) {
+      console.warn('No fue posible actualizar el calendario de profesores.', error);
+    }
     SessionsModule.renderSessions();
     TicketsModule.renderCombos();
     TicketsModule.renderWallet();
     InstructorModule.renderInstructors();
     InstructorModule.renderInstructorPortal();
+    TeacherPortal.render();
 
     App.updateWalletBadge();
 
@@ -31,7 +37,7 @@ const App = {
   switchTab: (tabId) => {
     App.currentTab = tabId;
 
-    const tabs = ['sessions', 'combos', 'wallet', 'instructors', 'instructor-portal'];
+    const tabs = ['sessions', 'combos', 'wallet', 'instructors', 'instructor-portal', 'teacher-portal'];
     tabs.forEach(t => {
       const section = document.getElementById(`tab-${t}`);
       if (section) {
@@ -59,6 +65,7 @@ const App = {
     if (tabId === 'wallet') TicketsModule.renderWallet();
     if (tabId === 'instructors') InstructorModule.renderInstructors();
     if (tabId === 'instructor-portal') InstructorModule.renderInstructorPortal();
+    if (tabId === 'teacher-portal') TeacherPortal.render();
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   },
