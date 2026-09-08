@@ -372,6 +372,7 @@ const TicketsModule = {
 
     const defaultCode = TicketsModule.queriedCode || localStorage.getItem('safezone_last_searched_code') || 'SZ-88210';
     const tx = Storage.findTransactionByCode(defaultCode);
+    const isSingleClass = Boolean(tx && (tx.type === 'single_class' || tx.sessionId || tx.totalTickets === 1));
 
     container.innerHTML = `
       <div class="glass-card rounded-3xl p-6 sm:p-8 mb-8 border border-pink-500/40 relative overflow-hidden bg-gradient-to-r from-pink-950/40 via-slate-950 to-slate-950 shadow-2xl">
@@ -417,9 +418,6 @@ const TicketsModule = {
           </button>
         </div>
       ` : `
-        const isSingleClass = tx.type === 'single_class' || tx.sessionId || tx.totalTickets === 1;
-
-        return `
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           <div class="lg:col-span-7">

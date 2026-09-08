@@ -285,6 +285,27 @@ const DEFAULT_TRANSACTIONS = [
 ];
 
 const Storage = {
+  initialize: async () => {
+    try {
+      const content = await SafeZoneCloud.fetchContent();
+      const sources = {
+        sessions: 'safezone_sessions',
+        instructors: 'safezone_instructors',
+        combos: 'safezone_combos'
+      };
+
+      Object.entries(sources).forEach(([key, storageKey]) => {
+        if (Array.isArray(content[key]) && content[key].length > 0) {
+          localStorage.setItem(storageKey, JSON.stringify(content[key]));
+        }
+      });
+      return true;
+    } catch (error) {
+      console.warn('Safe Zone no pudo cargar el contenido remoto; se usarán los datos locales.', error);
+      return false;
+    }
+  },
+
   getSessions: () => {
     const data = localStorage.getItem('safezone_sessions');
     return data ? JSON.parse(data) : DEFAULT_SESSIONS;

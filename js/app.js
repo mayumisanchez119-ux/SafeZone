@@ -6,7 +6,8 @@
 const App = {
   currentTab: 'sessions',
 
-  init: () => {
+  init: async () => {
+    await Storage.initialize();
     SessionsModule.renderSessions();
     TicketsModule.renderCombos();
     TicketsModule.renderWallet();
