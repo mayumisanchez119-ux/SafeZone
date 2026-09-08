@@ -1105,7 +1105,7 @@ const InstructorModule = {
     if (window.lucide) lucide.createIcons();
   },
 
-  processCreateInstructor: (event) => {
+  processCreateInstructor: async (event) => {
     event.preventDefault();
     if (!InstructorModule.isAuthenticated()) return;
 
@@ -1148,11 +1148,9 @@ const InstructorModule = {
       avatarPositionY: InstructorModule.currentAvatarPositionY,
       avatarZoom: InstructorModule.currentAvatarZoom,
       bio,
-      rating: 5.0,
-      reviewsCount: 10
     };
 
-    Storage.addInstructor(newInstData);
+    try { await Storage.addInstructor(newInstData); } catch (error) { App.showToast('No se pudo guardar el perfil. Conserva el formulario abierto e inicia sesión de nuevo si venció tu acceso.'); return; }
 
     InstructorModule.closeDetailsModal();
     InstructorModule.renderInstructorPortal();
@@ -1335,7 +1333,7 @@ const InstructorModule = {
     if (window.lucide) lucide.createIcons();
   },
 
-  processEditInstructor: (event, instructorId) => {
+  processEditInstructor: async (event, instructorId) => {
     event.preventDefault();
     if (!InstructorModule.isAuthenticated()) return;
 
@@ -1383,7 +1381,7 @@ const InstructorModule = {
       bio
     };
 
-    Storage.updateInstructor(instructorId, updatedData);
+    try { await Storage.updateInstructor(instructorId, updatedData); } catch (error) { App.showToast('No se pudo guardar el perfil. Conserva el formulario abierto e inicia sesión de nuevo si venció tu acceso.'); return; }
 
     InstructorModule.closeDetailsModal();
     InstructorModule.renderInstructorPortal();
@@ -1638,12 +1636,9 @@ const InstructorModule = {
             </div>
           </div>
 
-          <div class="pt-4 border-t border-slate-800 flex items-center justify-between">
-            <div class="flex items-center gap-1 text-pink-400 text-xs font-bold">
-              <i data-lucide="star" class="w-3.5 h-3.5 fill-pink-400"></i>
-              <span>${inst.rating}</span>
-              <span class="text-slate-500 font-normal">(${inst.reviewsCount} reseñas)</span>
-            </div>
+          <div class="pt-4 border-t border-slate-800 flex flex-col gap-3">
+<span data-professor-rating="${inst.id}" class="text-xs text-pink-300">Cargando calificaciones…</span>
+<button type="button" onclick="Ratings.open('${inst.id}')" class="px-3 py-2 rounded-xl border border-pink-500/40 text-pink-300 hover:bg-pink-950 text-xs font-bold">☆ Calificar al profe</button>
             <button onclick="SessionsModule.setFilter('${inst.discipline}'); App.switchTab('sessions');" 
               class="px-3.5 py-1.5 rounded-lg bg-pink-500/10 hover:bg-pink-600 text-pink-400 hover:text-white border border-pink-500/30 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer">
               <span>Ver Encuentros</span>
