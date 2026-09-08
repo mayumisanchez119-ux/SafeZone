@@ -44,16 +44,18 @@
   };
   Storage.addInstructor = data => {
     const list = Storage.getInstructors();
-    const profile = { id: 'inst-' + Math.random().toString(36).substring(2, 9), rating: 5, reviewsCount: 1, ...data };
+    const profile = { id: 'inst-' + Math.random().toString(36).substring(2, 9), ...data };
     list.push(profile); Storage.saveInstructors(list);
     C.createInstructor(profile, token()).catch(syncError);
     return profile;
   };
-  Storage.updateInstructor = (id, changes) => {
+  Storage.updateInstructor = async (id, changes) => {
     const list = Storage.getInstructors(); const index = list.findIndex(item => item.id === id);
     if (index < 0) return false;
-    const profile = { ...list[index], ...changes }; list[index] = profile; Storage.saveInstructors(list);
-    C.updateInstructor(id, profile, token()).catch(syncError);
+    const profile = { ...list[index], ...changes };
+    delete profile.rating; delete profile.reviewsCount;
+    await C.updateInstructor(id, profile, token());
+    list[index] = profile; Storage.saveInstructors(list);
     return true;
   };
   Storage.deleteInstructor = id => {
