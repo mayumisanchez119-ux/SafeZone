@@ -18,7 +18,8 @@
     catch (error) { console.warn('No fue posible actualizar los perfiles de Safe Zone.', error); }
   };
   Storage.addInstructor = async (data) => {
-    const profile = Object.assign({ id: 'inst-' + Math.random().toString(36).substring(2, 9), rating: 5, reviewsCount: 1 }, data);
+    const profile = Object.assign({ id: 'inst-' + Math.random().toString(36).substring(2, 9) }, data);
+    delete profile.rating; delete profile.reviewsCount;
     await cloud.createInstructor(profile, token());
     Storage.saveInstructors(Storage.getInstructors().concat(profile));
     return profile;
