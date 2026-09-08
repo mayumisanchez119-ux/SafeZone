@@ -12,6 +12,9 @@ const InstructorModule = {
   selectedBatchDays: [],
   txFilter: 'all',
   currentInstructorAvatarBase64: null,
+  currentAvatarPositionX: 50,
+  currentAvatarPositionY: 50,
+  currentAvatarZoom: 100,
 
   isAuthenticated: () => {
     return localStorage.getItem('safezone_auth_token') === 'authenticated_staff_2026';
@@ -158,7 +161,15 @@ const InstructorModule = {
 
     if (imageUrl) {
       InstructorModule.currentInstructorAvatarBase64 = imageUrl;
+      InstructorModule.resetAvatarFraming();
       if (previewImg) previewImg.src = imageUrl;
+      if (previewImg) {
+        previewImg.style.objectPosition = '50% 50%';
+        previewImg.style.transform = 'scale(1)';
+      }
+      document.querySelectorAll('#inst-avatar-preview-wrap input[type="range"]').forEach((input, index) => {
+        input.value = index === 2 ? 100 : 50;
+      });
       if (previewWrap) previewWrap.classList.remove('hidden');
       if (placeholder) placeholder.classList.add('hidden');
     } else {
@@ -167,6 +178,26 @@ const InstructorModule = {
       if (placeholder) placeholder.classList.remove('hidden');
     }
     if (window.lucide) lucide.createIcons();
+  },
+
+  setAvatarFraming: (axis, value) => {
+    const numericValue = Number(value);
+    if (axis === 'x') InstructorModule.currentAvatarPositionX = numericValue;
+    if (axis === 'y') InstructorModule.currentAvatarPositionY = numericValue;
+    if (axis === 'zoom') InstructorModule.currentAvatarZoom = numericValue;
+    const preview = document.getElementById('inst-avatar-preview-img');
+    if (preview) {
+      preview.style.objectPosition = `${InstructorModule.currentAvatarPositionX}% ${InstructorModule.currentAvatarPositionY}%`;
+      preview.style.transform = `scale(${InstructorModule.currentAvatarZoom / 100})`;
+    }
+    const valueEl = document.getElementById(`inst-avatar-${axis}-value`);
+    if (valueEl) valueEl.textContent = axis === 'zoom' ? `${numericValue}%` : `${numericValue}%`;
+  },
+
+  resetAvatarFraming: (instructor = null) => {
+    InstructorModule.currentAvatarPositionX = instructor?.avatarPositionX ?? 50;
+    InstructorModule.currentAvatarPositionY = instructor?.avatarPositionY ?? 50;
+    InstructorModule.currentAvatarZoom = instructor?.avatarZoom ?? 100;
   },
 
   handleInstructorAvatarFile: (event) => {
@@ -872,7 +903,7 @@ const InstructorModule = {
               <div class="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col justify-between relative overflow-hidden group">
                 <div>
                   <div class="flex items-start gap-4 mb-4">
-                    <img src="${inst.avatar}" alt="${inst.name}" class="w-16 h-16 rounded-2xl object-cover border-2 border-pink-500/50 shadow-md">
+                    <div class="w-16 h-16 rounded-2xl border-2 border-pink-500/50 shadow-md overflow-hidden shrink-0"><img src="${inst.avatar}" alt="${inst.name}" class="w-full h-full object-cover" style="object-position: ${inst.avatarPositionX ?? 50}% ${inst.avatarPositionY ?? 50}%; transform: scale(${(inst.avatarZoom ?? 100) / 100});"></div>
                     <div class="min-w-0 flex-grow">
                       <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
                         ${badgesHtml}
@@ -916,6 +947,7 @@ const InstructorModule = {
     if (!InstructorModule.isAuthenticated()) return;
 
     InstructorModule.currentInstructorAvatarBase64 = null;
+    InstructorModule.resetAvatarFraming();
 
     const modal = document.getElementById('details-modal');
     const modalContent = document.getElementById('details-modal-content');
@@ -1015,7 +1047,12 @@ const InstructorModule = {
               </div>
 
               <div id="inst-avatar-preview-wrap" class="hidden">
-                <img id="inst-avatar-preview-img" src="" alt="Foto Profesor" class="w-24 h-24 rounded-2xl mx-auto border-2 border-pink-500 object-cover shadow-xl mb-2">
+                <div class="w-24 h-24 rounded-2xl mx-auto border-2 border-pink-500 overflow-hidden shadow-xl mb-2"><img id="inst-avatar-preview-img" src="" alt="Foto Profesor" class="w-full h-full object-cover" style="object-position: 50% 50%;"></div>
+                <div class="max-w-xs mx-auto grid grid-cols-3 gap-2 text-left mb-2" aria-label="Ajustar encuadre de la foto">
+                  <label class="text-[9px] text-slate-400">Horizontal <input type="range" min="0" max="100" value="50" oninput="InstructorModule.setAvatarFraming('x', this.value)" class="w-full accent-pink-500"></label>
+                  <label class="text-[9px] text-slate-400">Vertical <input type="range" min="0" max="100" value="50" oninput="InstructorModule.setAvatarFraming('y', this.value)" class="w-full accent-pink-500"></label>
+                  <label class="text-[9px] text-slate-400">Zoom <input type="range" min="100" max="150" value="100" oninput="InstructorModule.setAvatarFraming('zoom', this.value)" class="w-full accent-pink-500"></label>
+                </div>
                 <span class="text-[11px] text-emerald-400 font-bold flex items-center justify-center gap-1">
                   <i data-lucide="check" class="w-3.5 h-3.5"></i> Foto cargada correctamente (Clic para cambiar)
                 </span>
@@ -1107,6 +1144,9 @@ const InstructorModule = {
       title,
       experience,
       avatar,
+      avatarPositionX: InstructorModule.currentAvatarPositionX,
+      avatarPositionY: InstructorModule.currentAvatarPositionY,
+      avatarZoom: InstructorModule.currentAvatarZoom,
       bio,
       rating: 5.0,
       reviewsCount: 10
@@ -1128,6 +1168,7 @@ const InstructorModule = {
     if (!inst) return;
 
     InstructorModule.currentInstructorAvatarBase64 = inst.avatar;
+    InstructorModule.resetAvatarFraming(inst);
 
     const currentDisciplines = inst.disciplines && inst.disciplines.length > 0 ? inst.disciplines : [inst.discipline];
     const hasDefensa = currentDisciplines.includes('defensa-personal');
@@ -1235,7 +1276,12 @@ const InstructorModule = {
               </div>
 
               <div id="inst-avatar-preview-wrap" class="${inst.avatar ? '' : 'hidden'}">
-                <img id="inst-avatar-preview-img" src="${inst.avatar || ''}" alt="Foto Profesor" class="w-24 h-24 rounded-2xl mx-auto border-2 border-pink-500 object-cover shadow-xl mb-2">
+                <div class="w-24 h-24 rounded-2xl mx-auto border-2 border-pink-500 overflow-hidden shadow-xl mb-2"><img id="inst-avatar-preview-img" src="${inst.avatar || ''}" alt="Foto Profesor" class="w-full h-full object-cover" style="object-position: ${inst.avatarPositionX ?? 50}% ${inst.avatarPositionY ?? 50}%; transform: scale(${(inst.avatarZoom ?? 100) / 100});"></div>
+                <div class="max-w-xs mx-auto grid grid-cols-3 gap-2 text-left mb-2" aria-label="Ajustar encuadre de la foto">
+                  <label class="text-[9px] text-slate-400">Horizontal <input type="range" min="0" max="100" value="${inst.avatarPositionX ?? 50}" oninput="InstructorModule.setAvatarFraming('x', this.value)" class="w-full accent-pink-500"></label>
+                  <label class="text-[9px] text-slate-400">Vertical <input type="range" min="0" max="100" value="${inst.avatarPositionY ?? 50}" oninput="InstructorModule.setAvatarFraming('y', this.value)" class="w-full accent-pink-500"></label>
+                  <label class="text-[9px] text-slate-400">Zoom <input type="range" min="100" max="150" value="${inst.avatarZoom ?? 100}" oninput="InstructorModule.setAvatarFraming('zoom', this.value)" class="w-full accent-pink-500"></label>
+                </div>
                 <span class="text-[11px] text-emerald-400 font-bold flex items-center justify-center gap-1">
                   <i data-lucide="check" class="w-3.5 h-3.5"></i> Foto cargada correctamente (Clic para cambiar)
                 </span>
@@ -1331,6 +1377,9 @@ const InstructorModule = {
       title,
       experience,
       avatar,
+      avatarPositionX: InstructorModule.currentAvatarPositionX,
+      avatarPositionY: InstructorModule.currentAvatarPositionY,
+      avatarZoom: InstructorModule.currentAvatarZoom,
       bio
     };
 
@@ -1571,7 +1620,7 @@ const InstructorModule = {
         <div class="glass-card glass-card-hover rounded-2xl p-6 sm:p-7 flex flex-col justify-between border border-slate-800 relative overflow-hidden group">
           <div>
             <div class="flex items-start gap-4 mb-4">
-              <img src="${inst.avatar}" alt="${inst.name}" class="w-16 h-16 rounded-2xl object-cover border-2 border-pink-500/50 shadow-md">
+              <div class="w-16 h-16 rounded-2xl border-2 border-pink-500/50 shadow-md overflow-hidden shrink-0"><img src="${inst.avatar}" alt="${inst.name}" class="w-full h-full object-cover" style="object-position: ${inst.avatarPositionX ?? 50}% ${inst.avatarPositionY ?? 50}%; transform: scale(${(inst.avatarZoom ?? 100) / 100});"></div>
               <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
                   ${badgesHtml}
