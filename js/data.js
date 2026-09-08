@@ -12,8 +12,8 @@ const DEFAULT_INSTRUCTORS = [
     title: "Entrenador Certificado de Boxeo Safe Zone",
     experience: "12 años de experiencia | Ex-campeón nacional",
     avatar: "https://images.unsplash.com/photo-1549476464-37392f717541?auto=format&fit=crop&q=80&w=300",
-    rating: 4.9,
-    reviewsCount: 48,
+
+
     bio: "Especialista en guardia sólida, combinaciones de impacto, esquiva de golpes y acondicionamiento cardiovascular de alta intensidad en Safe Zone Club."
   },
   {
@@ -25,8 +25,8 @@ const DEFAULT_INSTRUCTORS = [
     title: "Cinturón Negro 4to Dan Taekwondo WT",
     experience: "15 años formando atletas y practicantes",
     avatar: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&q=80&w=300",
-    rating: 5.0,
-    reviewsCount: 62,
+
+
     bio: "Enfocada en flexibilidad dinámica, patadas de contraataque veloz, balance postural y disciplina marcial tradicional."
   },
   {
@@ -38,8 +38,8 @@ const DEFAULT_INSTRUCTORS = [
     title: "Instructora Senior Safe Zone & Combate Urbano",
     experience: "9 años capacitando en seguridad personal y prevención",
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300",
-    rating: 4.95,
-    reviewsCount: 74,
+
+
     bio: "Técnicas 100% realistas para neutralizar agresiones callejeras, escapes de agarres, control de distancia y manejo del estrés bajo el método Safe Zone."
   },
   {
@@ -51,8 +51,8 @@ const DEFAULT_INSTRUCTORS = [
     title: "Especialista en Grappling & Control en el Suelo",
     experience: "8 años en BJJ y Defensa Policial",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300",
-    rating: 4.85,
-    reviewsCount: 36,
+
+
     bio: "Aprende a neutralizar atacantes de mayor peso mediante palancas, derribos seguros y escapes efectivos desde el piso."
   }
 ];
@@ -155,82 +155,7 @@ function getFutureDate(daysFromNow) {
   return d.toISOString().split('T')[0];
 }
 
-const DEFAULT_SESSIONS = [
-  {
-    id: "ses-1",
-    discipline: "defensa-personal",
-    title: "Defensa Personal Urbana: Desarmes y Escapes de Agarre",
-    instructorId: "inst-3",
-    instructorName: "Andrea 'Valkiria' Silva",
-    instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300",
-    date: getFutureDate(1),
-    time: "07:30 AM - 09:00 AM",
-    recurrence: "every_saturday",
-    recurrenceLabel: "Todos los Sábados",
-    location: {
-      name: "Parque Simón Bolívar - Sector Templete",
-      address: "Av. Calle 63 y Av. 68, Bogotá",
-      zone: "Zona Salitre"
-    },
-    price: 10000,
-    capacity: 18,
-    attendees: [
-      { id: "att-1", name: "Valentina Gómez", phone: "3124567890", paymentMethod: "ticket", uniqueCode: "SZ-88210", registeredAt: "2026-08-29" },
-      { id: "att-2", name: "Felipe Morales", phone: "3001234567", paymentMethod: "single_payment", uniqueCode: "SZ-CL-10492", registeredAt: "2026-08-29" }
-    ],
-    level: "Todos los niveles",
-    requirements: ["Ropa deportiva cómoda", "Hidratación", "Toalla de mano"],
-    description: "Aprende a reaccionar ante intentos de agarre de muñecas, ropa o estrangulamiento. Técnicas basadas en biomecánica donde la fuerza del atacante se vuelve en su contra."
-  },
-  {
-    id: "ses-2",
-    discipline: "boxeo",
-    title: "Técnica de Boxeo: Guardia, Jab-Cross y Desplazamiento",
-    instructorId: "inst-1",
-    instructorName: "Carlos 'El Toro' Mendoza",
-    instructorAvatar: "https://images.unsplash.com/photo-1549476464-37392f717541?auto=format&fit=crop&q=80&w=300",
-    date: getFutureDate(2),
-    time: "08:00 AM - 09:30 AM",
-    recurrence: "every_sunday",
-    recurrenceLabel: "Todos los Domingos",
-    location: {
-      name: "Parque El Virrey - Costado Oriental",
-      address: "Calle 87 con Cra 15, Bogotá",
-      zone: "Zona Norte"
-    },
-    price: 10000,
-    capacity: 15,
-    attendees: [
-      { id: "att-4", name: "David Castro", phone: "3102345678", paymentMethod: "ticket", uniqueCode: "SZ-BX-55210", registeredAt: "2026-08-28" }
-    ],
-    level: "Principiante a Intermedio",
-    requirements: ["Vendas elásticas (4.5m)", "Guantes (opcionales)", "Agua"],
-    description: "Perfecciona tu postura, potencia de golpeo con giro de cadera, combinaciones básicas de 3 golpes y ejercicios de sombra con manoplas."
-  },
-  {
-    id: "ses-3",
-    discipline: "taekwondo",
-    title: "Taekwondo Dinámico: Patadas Veloces & Distancia de Combate",
-    instructorId: "inst-2",
-    instructorName: "Mtra. Jin-Woo & Andrea Park",
-    instructorAvatar: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&q=80&w=300",
-    date: getFutureDate(2),
-    time: "09:30 AM - 11:00 AM",
-    recurrence: "biweekly_sunday",
-    recurrenceLabel: "Un Domingo cada 15 días",
-    location: {
-      name: "Sede Coliseo El Salitre - Canchas Exteriores",
-      address: "Calle 63 # 68-45, Bogotá",
-      zone: "Zona Salitre"
-    },
-    price: 10000,
-    capacity: 20,
-    attendees: [],
-    level: "Todos los niveles",
-    requirements: ["Ropa deportiva amplia o dobok", "Hidratación", "Buena disposición para estiramientos"],
-    description: "Trabajo intensivo de elasticidad, patada circular (Dollyo Chagi), patada descendente y cambios rápidos de guardia para esquivar ataques."
-  }
-];
+const DEFAULT_SESSIONS = [];
 
 const DEFAULT_TRANSACTIONS = [
   {
@@ -290,12 +215,11 @@ const Storage = {
       const content = await SafeZoneCloud.fetchContent();
       const sources = {
         sessions: 'safezone_sessions',
-        instructors: 'safezone_instructors',
         combos: 'safezone_combos'
       };
 
       Object.entries(sources).forEach(([key, storageKey]) => {
-        if (Array.isArray(content[key]) && content[key].length > 0) {
+        if (Array.isArray(content[key])) {
           localStorage.setItem(storageKey, JSON.stringify(content[key]));
         }
       });
@@ -316,7 +240,7 @@ const Storage = {
 
   getSessions: () => {
     const data = localStorage.getItem('safezone_sessions');
-    const sessions = data ? JSON.parse(data) : DEFAULT_SESSIONS;
+    const sessions = (data ? JSON.parse(data) : DEFAULT_SESSIONS).filter(session => !['ses-1', 'ses-2', 'ses-3'].includes(session.id));
     const teacherSessions = Storage.getTeacherSchedules().map(schedule => ({
       id: `teacher-${schedule.id}`,
       discipline: schedule.discipline,
@@ -350,8 +274,8 @@ const Storage = {
     const instructors = Storage.getInstructors();
     const newInst = {
       id: "inst-" + Math.random().toString(36).substring(2, 9),
-      rating: 5.0,
-      reviewsCount: 1,
+
+
       ...instructorData
     };
     instructors.push(newInst);
