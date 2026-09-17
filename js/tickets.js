@@ -29,7 +29,7 @@ const TicketsModule = {
     const container = document.getElementById('combos-container');
     if (!container) return;
 
-    const combos = Storage.getCombos();
+    const combos = Storage.getCombos(); const instructors = Storage.getInstructors();
     
     const filtered = combos.filter(combo => {
       if (TicketsModule.currentComboFilter === 'all_types') return true;
@@ -38,7 +38,7 @@ const TicketsModule = {
     });
 
     container.innerHTML = filtered.map(combo => {
-      let scopeBadge = "";
+      let scopeBadge = ""; const comboInstructor = combo.discipline === 'all' ? null : instructors.find(inst => (inst.disciplines?.length ? inst.disciplines : [inst.discipline]).some(discipline => String(discipline).trim().toLowerCase() === combo.discipline));
       if (combo.discipline === 'all') {
         scopeBadge = `<span class="bg-pink-950/80 text-pink-300 border border-pink-700/60 text-[10px] font-extrabold px-2.5 py-1 rounded-md flex items-center gap-1">
           <i data-lucide="globe" class="w-3.5 h-3.5"></i> PASE UNIVERSAL SAFE ZONE (ALL-ACCESS)
@@ -72,7 +72,7 @@ const TicketsModule = {
 
             <div class="mb-4 pr-16">
               <h3 class="text-2xl font-bold text-white mb-2 font-heading group-hover:text-pink-400 transition-colors">${combo.title}</h3>
-              <p class="text-slate-300 text-sm leading-relaxed">${combo.description}</p>
+              <p class="text-slate-300 text-sm leading-relaxed">${combo.description}</p>${combo.discipline === 'all' ? '' : `<p>Profesor del combo: ${comboInstructor?.name || 'Profesor por asignar'}</p>`}
             </div>
 
             <div class="my-5 p-4 rounded-xl bg-slate-950/90 border border-pink-900/30 shadow-inner">
@@ -115,7 +115,7 @@ const TicketsModule = {
   },
 
   openPurchaseModal: (comboId) => {
-    const combos = Storage.getCombos();
+    const combos = Storage.getCombos(); const instructors = Storage.getInstructors();
     const combo = combos.find(c => c.id === comboId);
     if (!combo) return;
 
@@ -262,7 +262,7 @@ const TicketsModule = {
 
   processPurchase: (event, comboId) => {
     event.preventDefault();
-    const combos = Storage.getCombos();
+    const combos = Storage.getCombos(); const instructors = Storage.getInstructors();
     const combo = combos.find(c => c.id === comboId);
     if (!combo) return;
 
