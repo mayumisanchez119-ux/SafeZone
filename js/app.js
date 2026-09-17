@@ -213,7 +213,7 @@ const App = {
 
         <!-- BOTONES DE ACCIÓN -->
         <div class="space-y-3">
-          <a href="https://wa.me/573123456789?text=${encodeURIComponent('Hola Safe Zone Club, acabo de pagar ' + (isSingleClass ? 'la clase de ' + tx.title + (tx.sessionDate ? ' (' + tx.sessionDate + ')' : '') : 'el ' + tx.title) + ' y subí mi comprobante. Mi Código Único es: ' + tx.uniqueCode + ' (' + tx.studentName + '). Por favor me confirman cuando esté aprobado. ¡Gracias!')}" 
+          <a href="https://wa.me/573008342306?text=${encodeURIComponent('Hola Safe Zone Club, acabo de pagar ' + (isSingleClass ? 'la clase de ' + tx.title + (tx.sessionDate ? ' (' + tx.sessionDate + ')' : '') : 'el ' + tx.title) + ' y subí mi comprobante. Mi Código Único es: ' + tx.uniqueCode + ' (' + tx.studentName + '). Por favor me confirman cuando esté aprobado. ¡Gracias!')}" 
             target="_blank" 
             class="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer">
             <i data-lucide="message-circle" class="w-4 h-4"></i>
