@@ -3,20 +3,59 @@
   const cloud = SafeZoneCloud;
   const sessionKey = 'safezone_admin_session';
   const token = () => { try { return JSON.parse(localStorage.getItem(sessionKey) || '{}').access_token || ''; } catch (error) { return ''; } };
-  let memory = null;
-  const originalGet = Storage.getInstructors.bind(Storage);
-  Storage.getInstructors = () => memory || originalGet();
+  // Old caches may contain demo profiles. Only use profiles confirmed by Supabase
+  // during this visit; never overwrite or delete the user's existing cache on failure.
+  let memory = [];
+  let pending = null;
+  Storage.instructorsLoadState = 'loading';
+  Storage.getInstructors = () => memory;
   Storage.saveInstructors = (profiles) => {
     memory = profiles;
     try { localStorage.setItem('safezone_instructors', JSON.stringify(profiles)); }
     catch (error) { console.warn('La copia local está llena; los perfiles siguen protegidos en Safe Zone.', error); }
   };
-  const initialLoad = Storage.initialize.bind(Storage);
-  Storage.initialize = async () => {
-    await initialLoad();
-    try { Storage.saveInstructors(await cloud.fetchInstructors()); }
-    catch (error) { console.warn('No fue posible actualizar los perfiles de Safe Zone.', error); }
+  Storage.instructorsLoadMessage = () => `<div role="status" class="col-span-full glass-card rounded-2xl p-8 text-center text-slate-300">${Storage.instructorsLoadState === 'error'
+    ? 'No pudimos cargar los profesores. Revisa tu conexión.<br><button type="button" onclick="Storage.loadInstructors()" class="mt-4 px-5 py-3 rounded-xl bg-pink-600 text-white font-bold">Reintentar carga de profesores</button>'
+    : 'Cargando profesores…'}</div>`;
+  const redraw = () => {
+    InstructorModule.renderInstructors();
+    if (App.currentTab === 'instructor-portal') InstructorModule.renderInstructorPortal();
+    if (App.currentTab === 'teacher-portal') TeacherPortal.render();
   };
+  Storage.loadInstructors = () => {
+    if (pending) return pending;
+    Storage.instructorsLoadState = 'loading';
+    redraw();
+    pending = (async () => {
+      try {
+        const profiles = await cloud.fetchInstructors();
+        if (!Array.isArray(profiles)) throw new Error('Respuesta de profesores inválida.');
+        Storage.saveInstructors(profiles);
+        Storage.instructorsLoadState = 'ready';
+      } catch (error) {
+        Storage.instructorsLoadState = 'error';
+        console.warn('No fue posible actualizar los perfiles de Safe Zone.', error);
+      } finally {
+        pending = null;
+        redraw();
+      }
+    })();
+    return pending;
+  };
+  const initialLoad = Storage.initialize.bind(Storage);
+  Storage.initialize = () => Promise.all([initialLoad(), Storage.loadInstructors()]);
+  const renderProfiles = InstructorModule.renderInstructors.bind(InstructorModule);
+  InstructorModule.renderInstructors = () => {
+    const container = document.getElementById('instructors-container');
+    if (Storage.instructorsLoadState !== 'ready') {
+      if (container) container.innerHTML = Storage.instructorsLoadMessage();
+      return;
+    }
+    renderProfiles();
+    if (container && !memory.length) container.innerHTML = '<p role="status" class="col-span-full p-8 text-center text-slate-300">Aún no hay profesores publicados.</p>';
+  };
+  const renderManagement = InstructorModule.renderInstructorsManagementSection.bind(InstructorModule);
+  InstructorModule.renderInstructorsManagementSection = () => Storage.instructorsLoadState === 'ready' ? renderManagement() : Storage.instructorsLoadMessage();
   Storage.addInstructor = async (data) => {
     const profile = Object.assign({ id: 'inst-' + Math.random().toString(36).substring(2, 9) }, data);
     delete profile.rating; delete profile.reviewsCount;
