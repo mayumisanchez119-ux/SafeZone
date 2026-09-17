@@ -83,7 +83,7 @@ const SessionsModule = {
       } else if (session.discipline === 'taekwondo') {
         badgeClass = 'badge-taekwondo';
         disciplineLabel = 'Taekwondo';
-        disciplineIcon = 'zap';
+        disciplineIcon = 'zap'; } else if (session.discipline === 'hapkido') { badgeClass = 'bg-indigo-950 text-indigo-300 border border-indigo-700/60'; disciplineLabel = 'Hapkido'; disciplineIcon = 'hand';
       }
 
       return `
@@ -497,7 +497,7 @@ const SessionsModule = {
         return;
       }
 
-      tx.remainingTickets -= 1;
+      if (tx.discipline !== 'all' && tx.discipline !== session.discipline) { alert(`Este código es exclusivo de ${tx.discipline.toUpperCase()} y no puede usarse para una clase de ${session.discipline.toUpperCase()}.`); return; } tx.remainingTickets -= 1;
       tx.history.push({
         action: "Redención de Ticket",
         detail: `Cupo reservado para: ${session.title} (${session.date})`,
