@@ -104,6 +104,22 @@ const InstructorModule = {
     }
   },
 
+  deleteTransaction: (txId) => {
+    if (!InstructorModule.isAuthenticated()) return;
+    const tx = Storage.getTransactions().find(item => item.id === txId);
+    if (!tx) return;
+    const confirmed = window.confirm(`¿Eliminar el registro ${tx.uniqueCode} de ${tx.studentName}?\n\nEsta acción elimina el comprobante y el código de esta pantalla. Úsala solo si el pago fue cargado por error.`);
+    if (!confirmed) return;
+    if (!Storage.deleteTransaction(txId)) {
+      App.showToast('No fue posible eliminar ese registro. Inténtalo de nuevo.');
+      return;
+    }
+    App.showToast('🗑️ Registro eliminado correctamente.');
+    InstructorModule.renderInstructorPortal();
+    if (window.TicketsModule) TicketsModule.renderWallet();
+    if (window.App) App.updateWalletBadge();
+  },
+
   sendApprovalWhatsApp: (txId) => {
     const txs = Storage.getTransactions();
     const tx = txs.find(t => t.id === txId);
@@ -569,6 +585,11 @@ const InstructorModule = {
                       <button onclick="InstructorModule.openReceiptModal('${tx.receiptUrl}', '${tx.uniqueCode}')" 
                         class="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs transition-colors cursor-pointer" title="Ver foto del comprobante">
                         <i data-lucide="image" class="w-4 h-4 text-pink-400"></i>
+                      </button>
+                                            <button onclick="InstructorModule.deleteTransaction('${tx.id}')"
+                        class="p-2.5 rounded-xl bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 text-xs transition-colors cursor-pointer"
+                        title="Eliminar este registro cargado por error">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
                       </button>
                     </div>
 
