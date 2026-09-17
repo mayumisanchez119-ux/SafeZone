@@ -361,9 +361,9 @@ const SessionsModule = {
               <span class="font-bold text-white">Transferencia de Aporte Individual</span>
               <span class="font-extrabold text-pink-400">$10.000 COP</span>
             </div>
-            <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-300">
-              <div class="p-2 rounded-lg bg-slate-900 border border-slate-800">🟣 Nequi: <strong>312 345 6789</strong></div>
-              <div class="p-2 rounded-lg bg-slate-900 border border-slate-800">🔴 Daviplata: <strong>312 345 6789</strong></div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-slate-300">
+              <div class="p-2 rounded-lg bg-slate-900 border border-slate-800">🟣 Nequi: <strong>300 834 2306</strong></div>
+<div class="p-2 rounded-lg bg-slate-900 border border-slate-800">🔴 Daviplata: <strong>300 834 2306</strong></div><div class="p-2 rounded-lg bg-slate-900 border border-slate-800">🟢 Bre-B: <strong>300 834 2306</strong></div>
             </div>
 
             <div>
