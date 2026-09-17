@@ -154,7 +154,7 @@ const TicketsModule = {
                 <span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
                 <span class="text-slate-300 font-bold">Nequi:</span>
               </div>
-              <span class="text-white font-mono font-bold">312 345 6789</span>
+              <span class="text-white font-mono font-bold">300 834 2306</span>
             </div>
 
             <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
@@ -162,10 +162,10 @@ const TicketsModule = {
                 <span class="w-2.5 h-2.5 rounded-full bg-red-400"></span>
                 <span class="text-slate-300 font-bold">Daviplata:</span>
               </div>
-              <span class="text-white font-mono font-bold">312 345 6789</span>
+              <span class="text-white font-mono font-bold">300 834 2306</span>
             </div>
           </div>
-          <p class="text-[11px] text-slate-400">Realiza tu transferencia por el valor del paquete y adjunta la captura o foto del comprobante abajo.</p>
+          <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span><span class="text-slate-300 font-bold">Bre-B:</span></div><span class="text-white font-mono font-bold">300 834 2306</span></div><p class="text-[11px] text-slate-400">Realiza tu transferencia por el valor del paquete y adjunta la captura o foto del comprobante abajo.</p>
         </div>
 
         <form id="purchase-form" onsubmit="TicketsModule.processPurchase(event, '${combo.id}')" class="space-y-4">
@@ -184,9 +184,9 @@ const TicketsModule = {
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1.5">Medio de Pago Utilizado *</label>
               <select id="buyer-payment-method" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:border-pink-500 focus:outline-none">
-                <option value="Nequi (312 345 6789)">🟣 Nequi</option>
-                <option value="Daviplata (312 345 6789)">🔴 Daviplata</option>
-                <option value="Bancolombia Transferencia">🟡 Bancolombia</option>
+                <option value="Nequi (300 834 2306)">🟣 Nequi</option>
+                <option value="Daviplata (300 834 2306)">🔴 Daviplata</option>
+                <option value="Bre-B (300 834 2306)">🟢 Bre-B</option><option value="Bancolombia Transferencia">🟡 Bancolombia</option>
                 <option value="Efectivo / En Mano">💵 Pago en Mano</option>
               </select>
             </div>
@@ -203,7 +203,7 @@ const TicketsModule = {
                   <i data-lucide="upload-cloud" class="w-5 h-5"></i>
                 </div>
                 <p class="text-xs text-slate-300 font-medium">Haz clic aquí para seleccionar la foto del comprobante</p>
-                <p class="text-[10px] text-slate-500">JPG, PNG o Captura de pantalla de Nequi / Daviplata</p>
+                <p class="text-[10px] text-slate-500">JPG, PNG o captura de Nequi / Daviplata / Bre-B</p>
               </div>
 
               <div id="receipt-image-preview" class="hidden">
