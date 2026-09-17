@@ -332,6 +332,14 @@ const Storage = {
   saveTransactions: (transactions) => {
     localStorage.setItem('safezone_transactions', JSON.stringify(transactions));
   },
+  deleteTransaction: (txId) => {
+    const transactions = Storage.getTransactions();
+    const index = transactions.findIndex(tx => tx.id === txId);
+    if (index < 0) return false;
+    transactions.splice(index, 1);
+    Storage.saveTransactions(transactions);
+    return true;
+  },
   findTransactionByCode: (code) => {
     if (!code) return null;
     const cleanCode = code.trim().toUpperCase();
