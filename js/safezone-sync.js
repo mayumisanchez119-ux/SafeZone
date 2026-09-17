@@ -36,12 +36,7 @@
     if (!response.ok) throw new Error('No se pudo eliminar el profesor.');
   };
 
-  const originalInitialize = Storage.initialize.bind(Storage);
-  Storage.initialize = async () => {
-    await originalInitialize();
-    try { localStorage.setItem('safezone_instructors', JSON.stringify(await C.fetchInstructors())); }
-    catch (error) { console.warn('No fue posible actualizar la nómina de Safe Zone.', error); }
-  };
+  // Profile loading is owned by safezone-save-fix.js (one request, memory-first).
   Storage.addInstructor = data => {
     const list = Storage.getInstructors();
     const profile = { id: 'inst-' + Math.random().toString(36).substring(2, 9), ...data };
