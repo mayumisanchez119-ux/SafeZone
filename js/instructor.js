@@ -355,7 +355,7 @@ const InstructorModule = {
                 </button>
               </div>
 
-              <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px] text-slate-400 space-y-1 mt-4">
+              <div class="hidden">
                 <div class="flex items-center gap-1.5 text-pink-400 font-bold">
                   <i data-lucide="info" class="w-3.5 h-3.5"></i>
                   <span>Credenciales por Defecto:</span>
