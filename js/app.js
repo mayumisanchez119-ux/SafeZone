@@ -23,6 +23,7 @@ const App = {
     GalleryModule.render();
     InstructorModule.renderInstructorPortal();
     TeacherPortal.render();
+    AccessPortal.render();
 
     App.updateWalletBadge();
 
@@ -41,7 +42,7 @@ const App = {
   switchTab: (tabId) => {
     App.currentTab = tabId;
 
-    const tabs = ['sessions', 'combos', 'wallet', 'instructors', 'gallery', 'instructor-portal', 'teacher-portal'];
+    const tabs = ['sessions', 'combos', 'wallet', 'instructors', 'gallery', 'portal', 'instructor-portal', 'teacher-portal'];
     tabs.forEach(t => {
       const section = document.getElementById(`tab-${t}`);
       if (section) {
@@ -69,6 +70,7 @@ const App = {
     if (tabId === 'wallet') TicketsModule.renderWallet();
     if (tabId === 'instructors') InstructorModule.renderInstructors();
     if (tabId === 'gallery') GalleryModule.render();
+    if (tabId === 'portal') AccessPortal.render();
     if (tabId === 'instructor-portal') InstructorModule.renderInstructorPortal();
     if (tabId === 'teacher-portal') TeacherPortal.render();
 

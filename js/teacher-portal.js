@@ -35,7 +35,7 @@ const TeacherPortal = {
 
   logout: () => {
     localStorage.removeItem(TeacherPortal.storageKey);
-    TeacherPortal.render();
+    App.switchTab('portal');
   },
 
   render: () => {

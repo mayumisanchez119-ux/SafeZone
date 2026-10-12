@@ -52,7 +52,7 @@ const InstructorModule = {
     localStorage.removeItem('safezone_auth_token');
     localStorage.removeItem('safezone_logged_user');
     App.showToast('🔒 Sesión administrativa cerrada.');
-    InstructorModule.renderInstructorPortal();
+    App.switchTab('portal');
   },
 
   togglePasswordVisibility: () => {
