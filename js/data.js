@@ -306,7 +306,9 @@ const Storage = {
       const parsed = JSON.parse(data);
       // Solo combos 3+1 (<= 4 tickets)
       const filtered = parsed.filter(c => c.totalTickets <= 4);
-      return filtered.length > 0 ? filtered : DEFAULT_COMBOS;
+      // Una lista vacía puede ser una decisión válida de la administradora.
+      // No se deben restaurar combos eliminados automáticamente.
+      return filtered;
     } catch (e) {
       return DEFAULT_COMBOS;
     }

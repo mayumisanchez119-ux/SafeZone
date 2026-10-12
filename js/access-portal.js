@@ -52,15 +52,18 @@ const AccessPortal = {
       return;
     }
 
-    const validAdminPassword = InstructorModule.getCustomPassword();
-    const adminPasswordMatches = password === validAdminPassword || password === 'admin123' || password === 'safezone2026' || password === 'profesor2026';
-    if (AccessPortal.adminUsers.includes(username) && adminPasswordMatches) {
-      localStorage.removeItem(TeacherPortal.storageKey);
-      localStorage.setItem('safezone_auth_token', 'authenticated_staff_2026');
-      localStorage.setItem('safezone_logged_user', username);
-      InstructorModule.activeSubTab = 'transactions';
-      App.switchTab('instructor-portal');
-      App.showToast('🔓 Acceso de administradora habilitado.');
+    if (AccessPortal.adminUsers.includes(username)) {
+      try {
+        const session = await SafeZoneCloud.signInAdmin(password);
+        localStorage.removeItem(TeacherPortal.storageKey);
+        localStorage.setItem('safezone_admin_session', JSON.stringify({ access_token: session.access_token, expires_at: session.expires_at }));
+        localStorage.setItem('safezone_logged_user', username);
+        InstructorModule.activeSubTab = 'transactions';
+        App.switchTab('instructor-portal');
+        App.showToast('🔓 Acceso de administradora habilitado.');
+      } catch (requestError) {
+        AccessPortal.showError('Credenciales de administradora incorrectas o cuenta pendiente de activación.');
+      }
       return;
     }
 

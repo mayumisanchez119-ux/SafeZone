@@ -2,7 +2,7 @@
 const GalleryModule = {
   items: [],
   loadState: 'loading',
-  pendingImage: null,
+  pendingImages: [],
   maxItems: 12,
 
   escape(value = '') {
@@ -71,12 +71,10 @@ const GalleryModule = {
     return `
       <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <form onsubmit="GalleryModule.publish(event)" class="lg:col-span-2 glass-card rounded-2xl p-5 border border-pink-500/30 space-y-4">
-          <div><span class="text-xs font-black uppercase tracking-wider text-pink-400">Galería pública</span><h3 class="text-xl font-black text-white font-heading mt-1">Publicar foto de encuentro</h3><p class="text-xs text-slate-400 mt-1">La imagen aparecerá en la pestaña pública “Encuentros Reales”. Máximo ${GalleryModule.maxItems} fotos.</p></div>
-          <div><label class="block text-xs font-semibold text-slate-300 mb-1.5">Título *</label><input id="gallery-title" required maxlength="80" placeholder="Ej: Entrenamiento de Hapkido en Bogotá" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:border-pink-500 focus:outline-none"></div>
-          <div><label class="block text-xs font-semibold text-slate-300 mb-1.5">Fecha del encuentro</label><input id="gallery-date" type="date" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:border-pink-500 focus:outline-none"></div>
-          <div><label class="block text-xs font-semibold text-slate-300 mb-1.5">Descripción breve</label><textarea id="gallery-caption" rows="3" maxlength="220" placeholder="Un momento especial de nuestra comunidad…" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:border-pink-500 focus:outline-none"></textarea></div>
-          <div><label class="block text-xs font-semibold text-slate-300 mb-1.5">Foto *</label><input id="gallery-file" type="file" accept="image/png,image/jpeg,image/webp" required onchange="GalleryModule.preview(event)" class="block w-full text-xs text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-pink-600 file:px-3 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-pink-500"><img id="gallery-preview" class="hidden mt-3 w-full aspect-[4/3] object-cover rounded-xl border border-slate-700" alt="Vista previa de la foto"></div>
-          <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-pink-600 to-rose-600 text-white font-bold text-sm flex items-center justify-center gap-2"><i data-lucide="image-plus" class="w-4 h-4"></i>Publicar foto</button>
+          <div><span class="text-xs font-black uppercase tracking-wider text-pink-400">Galería pública</span><h3 class="text-xl font-black text-white font-heading mt-1">Publicar fotos de un encuentro</h3><p class="text-xs text-slate-400 mt-1">Elige una fecha y varias fotos: todas quedarán agrupadas bajo el mismo encuentro. Máximo ${GalleryModule.maxItems} fotos visibles.</p></div>
+          <div><label class="block text-xs font-semibold text-slate-300 mb-1.5">Fecha del encuentro *</label><input id="gallery-date" type="date" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:border-pink-500 focus:outline-none"></div>
+          <div><label class="block text-xs font-semibold text-slate-300 mb-1.5">Fotos *</label><input id="gallery-file" type="file" accept="image/png,image/jpeg,image/webp" multiple required onchange="GalleryModule.preview(event)" class="block w-full text-xs text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-pink-600 file:px-3 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-pink-500"><p class="mt-2 text-[11px] text-slate-500">Puedes seleccionar varias imágenes a la vez. Cada una se podrá eliminar individualmente después.</p><div id="gallery-preview" class="hidden mt-3 grid grid-cols-3 gap-2" aria-live="polite"></div></div>
+          <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-pink-600 to-rose-600 text-white font-bold text-sm flex items-center justify-center gap-2"><i data-lucide="images" class="w-4 h-4"></i>Publicar fotos</button>
         </form>
         <div class="lg:col-span-3"><div class="flex items-center justify-between mb-3"><h3 class="font-bold text-white">Fotos publicadas</h3><span class="text-xs text-pink-300">${GalleryModule.items.length}/${GalleryModule.maxItems}</span></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-4">${cards}</div></div>
       </div>`;
@@ -96,10 +94,29 @@ const GalleryModule = {
   },
 
   async preview(event) {
-    const file = event.target.files && event.target.files[0];
-    if (!file) return;
-    try { GalleryModule.pendingImage = await GalleryModule.compress(file); const preview = document.getElementById('gallery-preview'); preview.src = GalleryModule.pendingImage; preview.classList.remove('hidden'); }
-    catch (error) { GalleryModule.pendingImage = null; App.showToast(`⚠️ ${error.message}`); event.target.value = ''; }
+    const files = Array.from(event.target.files || []);
+    const preview = document.getElementById('gallery-preview');
+    if (!files.length) return;
+    const available = GalleryModule.maxItems - GalleryModule.items.length;
+    if (files.length > available) {
+      GalleryModule.pendingImages = [];
+      event.target.value = '';
+      preview.classList.add('hidden');
+      preview.innerHTML = '';
+      App.showToast(`⚠️ Puedes publicar máximo ${available} foto${available === 1 ? '' : 's'} más.`);
+      return;
+    }
+    try {
+      GalleryModule.pendingImages = await Promise.all(files.map(file => GalleryModule.compress(file)));
+      preview.innerHTML = GalleryModule.pendingImages.map((image, index) => `<img src="${image}" alt="Vista previa ${index + 1}" class="w-full aspect-square object-cover rounded-lg border border-slate-700">`).join('');
+      preview.classList.remove('hidden');
+    } catch (error) {
+      GalleryModule.pendingImages = [];
+      event.target.value = '';
+      preview.classList.add('hidden');
+      preview.innerHTML = '';
+      App.showToast(`⚠️ ${error.message}`);
+    }
   },
 
   async persist(nextItems) {
@@ -112,10 +129,14 @@ const GalleryModule = {
   async publish(event) {
     event.preventDefault();
     if (!InstructorModule.isAuthenticated()) return;
-    if (!GalleryModule.pendingImage) { App.showToast('⚠️ Selecciona una foto antes de publicar.'); return; }
-    if (GalleryModule.items.length >= GalleryModule.maxItems) { App.showToast(`⚠️ La galería admite máximo ${GalleryModule.maxItems} fotos. Elimina una para continuar.`); return; }
-    const item = { id: `gallery-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, title: document.getElementById('gallery-title').value.trim(), eventDate: document.getElementById('gallery-date').value, caption: document.getElementById('gallery-caption').value.trim(), image: GalleryModule.pendingImage, createdAt: new Date().toISOString() };
-    try { await GalleryModule.persist([item, ...GalleryModule.items]); GalleryModule.pendingImage = null; InstructorModule.renderInstructorPortal(); GalleryModule.render(); App.showToast('✅ Foto publicada en Encuentros Reales.'); }
+    const date = document.getElementById('gallery-date').value;
+    if (!date) { App.showToast('⚠️ Selecciona la fecha del encuentro.'); return; }
+    if (!GalleryModule.pendingImages.length) { App.showToast('⚠️ Selecciona al menos una foto antes de publicar.'); return; }
+    if (GalleryModule.items.length + GalleryModule.pendingImages.length > GalleryModule.maxItems) { App.showToast(`⚠️ La galería admite máximo ${GalleryModule.maxItems} fotos. Elimina una para continuar.`); return; }
+    const eventTitle = `Encuentro Safe Zone · ${GalleryModule.formatDate(date)}`;
+    const now = Date.now();
+    const items = GalleryModule.pendingImages.map((image, index) => ({ id: `gallery-${now}-${index}-${Math.random().toString(36).slice(2, 7)}`, title: eventTitle, eventDate: date, caption: '', image, createdAt: new Date().toISOString() }));
+    try { await GalleryModule.persist([...items, ...GalleryModule.items]); GalleryModule.pendingImages = []; InstructorModule.renderInstructorPortal(); GalleryModule.render(); App.showToast(`✅ ${items.length} foto${items.length === 1 ? '' : 's'} publicada${items.length === 1 ? '' : 's'} en Encuentros Reales.`); }
     catch (error) { App.showToast(`⚠️ ${error.message || 'No fue posible publicar la foto.'}`); }
   },
 

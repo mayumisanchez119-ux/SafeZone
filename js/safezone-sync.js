@@ -74,7 +74,7 @@
       App.showToast('🔓 Acceso administrativo seguro habilitado.');
     } catch (requestError) { error.textContent = '❌ Credenciales incorrectas. Verifica el usuario y contraseña.'; error.classList.remove('hidden'); }
   };
-  InstructorModule.logout = () => { localStorage.removeItem(adminKey); localStorage.removeItem('safezone_logged_user'); InstructorModule.renderInstructorPortal(); App.showToast('🔒 Sesión administrativa cerrada.'); };
+  InstructorModule.logout = () => { localStorage.removeItem(adminKey); localStorage.removeItem('safezone_logged_user'); App.switchTab('portal'); App.showToast('🔒 Sesión administrativa cerrada.'); };
 
   const photoControls = () => document.querySelectorAll('#inst-avatar-dropzone').forEach(zone => {
     const input = zone.querySelector('#inst-avatar-file-input');

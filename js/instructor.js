@@ -640,7 +640,8 @@ const InstructorModule = {
           ${combos.map(combo => {
             let scopeLabel = combo.discipline === 'all' ? '🌐 Todas las Disciplinas (Universal)' : 
                              combo.discipline === 'boxeo' ? '🥊 Solo Boxeo' : 
-                             combo.discipline === 'taekwondo' ? '🥋 Solo Taekwondo' : '🛡️ Solo Defensa Personal';
+                             combo.discipline === 'taekwondo' ? '🥋 Solo Taekwondo' :
+                             combo.discipline === 'hapkido' ? '🥋 Solo Hapkido' : '🛡️ Solo Defensa Personal';
 
             return `
               <div class="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col justify-between relative overflow-hidden group">
@@ -689,11 +690,16 @@ const InstructorModule = {
                   </div>
                 </div>
 
-                <div class="pt-4 border-t border-slate-800">
+                <div class="pt-4 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <button onclick="InstructorModule.openEditComboModal('${combo.id}')" 
                     class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-fuchsia-600 hover:from-pink-500 hover:via-rose-500 hover:to-fuchsia-500 text-white font-bold text-xs shadow-lg shadow-pink-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer">
                     <i data-lucide="edit-3" class="w-4 h-4"></i>
                     <span>Editar Tarifas & Detalles</span>
+                  </button>
+                  <button onclick="InstructorModule.deleteCombo('${combo.id}')"
+                    class="w-full py-3 px-4 rounded-xl bg-red-950/50 hover:bg-red-900/60 text-red-200 border border-red-800/70 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    <span>Eliminar Combo</span>
                   </button>
                 </div>
 
@@ -703,6 +709,33 @@ const InstructorModule = {
         </div>
       </div>
     `;
+  },
+
+  deleteCombo: async (comboId) => {
+    if (!InstructorModule.isAuthenticated()) return;
+    const combos = Storage.getCombos();
+    const combo = combos.find(item => item.id === comboId);
+    if (!combo) return;
+    if (!window.confirm(`¿Eliminar el combo "${combo.title}"?\n\nDejará de mostrarse y no podrá comprarse. Los códigos ya emitidos no se modificarán.`)) return;
+
+    let session = null;
+    try { session = JSON.parse(localStorage.getItem('safezone_admin_session') || 'null'); }
+    catch (error) { session = null; }
+    if (!session?.access_token) {
+      App.showToast('Inicia sesión nuevamente para eliminar el combo.');
+      return;
+    }
+
+    const remaining = combos.filter(item => item.id !== comboId);
+    try {
+      await SafeZoneCloud.saveCombos(remaining, session.access_token);
+      Storage.saveCombos(remaining);
+      InstructorModule.renderInstructorPortal();
+      if (window.TicketsModule) TicketsModule.renderCombos();
+      App.showToast(`🗑️ Combo "${combo.title}" eliminado correctamente.`);
+    } catch (error) {
+      App.showToast('No fue posible eliminar el combo. Inténtalo nuevamente.');
+    }
   },
 
   openEditComboModal: (comboId) => {
