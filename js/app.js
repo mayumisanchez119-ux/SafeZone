@@ -8,7 +8,9 @@ const App = {
 
   init: async () => {
     await Storage.initialize();
-    await GalleryModule.load();
+    // La galería se carga en segundo plano: no debe retrasar los encuentros,
+    // la navegación ni los demás datos públicos de Safe Zone.
+    GalleryModule.load();
     try {
       Storage.saveTeacherSchedules(await SafeZoneCloud.fetchTeacherSchedules());
     } catch (error) {
