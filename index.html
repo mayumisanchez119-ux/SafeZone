@@ -89,16 +89,10 @@
             <span>Encuentros Reales</span>
           </button>
 
-          <button onclick="App.switchTab('instructor-portal')" data-nav="instructor-portal"
+          <button onclick="App.switchTab('portal')" data-nav="portal"
             class="px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-2 cursor-pointer">
             <i data-lucide="shield-check" class="w-4 h-4 text-pink-400"></i>
-            <span>Portal Administradora</span>
-          </button>
-
-          <button onclick="App.switchTab('teacher-portal')" data-nav="teacher-portal"
-            class="px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-2 cursor-pointer">
-            <i data-lucide="calendar-days" class="w-4 h-4 text-pink-400"></i>
-            <span>Portal Profesores</span>
+            <span>Portal de Acceso</span>
           </button>
         </nav>
 
@@ -136,13 +130,9 @@
         <i data-lucide="images" class="w-4 h-4"></i>
         <span>Galería</span>
       </button>
-      <button onclick="App.switchTab('instructor-portal')" data-nav="instructor-portal" class="flex flex-col items-center gap-1 text-slate-400 px-2">
+      <button onclick="App.switchTab('portal')" data-nav="portal" class="flex flex-col items-center gap-1 text-slate-400 px-2">
         <i data-lucide="shield-check" class="w-4 h-4"></i>
-        <span>Admin</span>
-      </button>
-      <button onclick="App.switchTab('teacher-portal')" data-nav="teacher-portal" class="flex flex-col items-center gap-1 text-slate-400 px-2">
-        <i data-lucide="calendar-days" class="w-4 h-4"></i>
-        <span>Calendario</span>
+        <span>Acceso</span>
       </button>
     </div>
   </header>
@@ -371,7 +361,12 @@
       <div id="gallery-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
     </section>
 
-    <!-- TAB 5: PORTAL ADMINISTRADORA & PROFESORES (HOJA DE PAGOS Y HORARIOS) -->
+    <!-- TAB: ACCESO ÚNICO A LOS PORTALES -->
+    <section id="tab-portal" class="hidden">
+      <div id="access-portal-container"></div>
+    </section>
+
+    <!-- PANELES INTERNOS: se muestran únicamente después de autenticar desde el acceso único. -->
     <section id="tab-instructor-portal" class="hidden">
       <div id="instructor-portal-container">
         <!-- Rendered by instructor.js with Authentication Gate -->
@@ -479,10 +474,11 @@
   <script src="js/data.js?v=20260917.3"></script>
   <script src="js/tickets.js?v=20260917.3"></script>
   <script src="js/sessions.js?v=20260917.3"></script>
-  <script src="js/instructor.js?v=20261012.2"></script>
-  <script src="js/teacher-portal.js?v=20260917.2"></script>
+  <script src="js/instructor.js?v=20261012.3"></script>
+  <script src="js/teacher-portal.js?v=20261012.3"></script>
+  <script src="js/access-portal.js?v=20261012.1"></script>
   <script src="js/gallery.js?v=20261012.1"></script>
-  <script src="js/app.js?v=20261012.2"></script>
+  <script src="js/app.js?v=20261012.3"></script>
 <script src="js/safezone-sync.js?v=20260917.1"></script><script src="js/safezone-save-fix.js?v=20260917.1"></script>
 <script src="js/ratings.js?v=20260908.7"></script>
 <script src="js/schedule-planner.js?v=20260917.2"></script></body>
