@@ -29,6 +29,24 @@ const SafeZoneCloud = {
     return response.json();
   },
 
+  async saveGallery(items, accessToken) {
+    const response = await fetch(
+      `${SafeZoneCloud.url}/rest/v1/safezone_content?on_conflict=content_key`,
+      {
+        method: 'POST',
+        headers: {
+          apikey: SafeZoneCloud.key,
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          Prefer: 'resolution=merge-duplicates,return=representation'
+        },
+        body: JSON.stringify({ content_key: 'gallery', payload: items })
+      }
+    );
+    if (!response.ok) throw new Error(`No fue posible guardar la galería (${response.status}).`);
+    return response.json();
+  },
+
   async signInTeacher(password) {
     const response = await fetch(`${SafeZoneCloud.url}/auth/v1/token?grant_type=password`, {
       method: 'POST',

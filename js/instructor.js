@@ -400,7 +400,7 @@ const InstructorModule = {
         </div>
       </div>
 
-      <!-- Selector de 4 Pestañas: 1. Transacciones | 2. Planificador | 3. Combos 3+1 | 4. Profesores & Staff -->
+      <!-- Selector de gestión administrativa -->
       <div class="flex items-center gap-2 sm:gap-3 mb-6 border-b border-slate-800 pb-4 overflow-x-auto">
         <button onclick="InstructorModule.switchSubTab('transactions')" 
           class="px-4 sm:px-5 py-3 rounded-xl text-xs font-extrabold flex items-center gap-2 cursor-pointer transition-all shrink-0 ${InstructorModule.activeSubTab === 'transactions' ? 'bg-gradient-to-r from-pink-600 via-rose-600 to-fuchsia-600 text-white shadow-lg shadow-pink-600/30' : 'bg-slate-900 text-slate-400 hover:text-white'}">
@@ -426,12 +426,19 @@ const InstructorModule = {
           <i data-lucide="users" class="w-4 h-4"></i>
           <span>4. Gestión de Profesores & Staff</span>
         </button>
+
+        <button onclick="InstructorModule.switchSubTab('gallery')"
+          class="px-4 sm:px-5 py-3 rounded-xl text-xs font-extrabold flex items-center gap-2 cursor-pointer transition-all shrink-0 ${InstructorModule.activeSubTab === 'gallery' ? 'bg-gradient-to-r from-pink-600 via-rose-600 to-fuchsia-600 text-white shadow-lg shadow-pink-600/30' : 'bg-slate-900 text-slate-400 hover:text-white'}">
+          <i data-lucide="images" class="w-4 h-4"></i>
+          <span>5. Fotos de Encuentros</span>
+        </button>
       </div>
 
       <!-- VISTA DINÁMICA -->
       ${InstructorModule.activeSubTab === 'transactions' ? InstructorModule.renderTransactionsSheet() : 
         InstructorModule.activeSubTab === 'calendar' ? InstructorModule.renderCalendarSection() : 
         InstructorModule.activeSubTab === 'combos' ? InstructorModule.renderCombosManagementSection() :
+        InstructorModule.activeSubTab === 'gallery' ? GalleryModule.renderAdmin() :
         InstructorModule.renderInstructorsManagementSection()}
     `;
 

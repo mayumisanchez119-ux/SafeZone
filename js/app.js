@@ -8,6 +8,7 @@ const App = {
 
   init: async () => {
     await Storage.initialize();
+    await GalleryModule.load();
     try {
       Storage.saveTeacherSchedules(await SafeZoneCloud.fetchTeacherSchedules());
     } catch (error) {
@@ -17,6 +18,7 @@ const App = {
     TicketsModule.renderCombos();
     TicketsModule.renderWallet();
     InstructorModule.renderInstructors();
+    GalleryModule.render();
     InstructorModule.renderInstructorPortal();
     TeacherPortal.render();
 
@@ -37,7 +39,7 @@ const App = {
   switchTab: (tabId) => {
     App.currentTab = tabId;
 
-    const tabs = ['sessions', 'combos', 'wallet', 'instructors', 'instructor-portal', 'teacher-portal'];
+    const tabs = ['sessions', 'combos', 'wallet', 'instructors', 'gallery', 'instructor-portal', 'teacher-portal'];
     tabs.forEach(t => {
       const section = document.getElementById(`tab-${t}`);
       if (section) {
@@ -64,6 +66,7 @@ const App = {
     if (tabId === 'combos') TicketsModule.renderCombos();
     if (tabId === 'wallet') TicketsModule.renderWallet();
     if (tabId === 'instructors') InstructorModule.renderInstructors();
+    if (tabId === 'gallery') GalleryModule.render();
     if (tabId === 'instructor-portal') InstructorModule.renderInstructorPortal();
     if (tabId === 'teacher-portal') TeacherPortal.render();
 
