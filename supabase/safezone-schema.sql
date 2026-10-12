@@ -1,7 +1,7 @@
 -- SafeZone lives alongside INNAEDO in one Supabase project, but uses only
 -- names prefixed with safezone_. Run this once in the project SQL editor.
 create table public.safezone_content (
-  content_key text primary key check (content_key in ('sessions', 'instructors', 'combos')),
+  content_key text primary key check (content_key in ('sessions', 'instructors', 'combos', 'gallery')),
   payload jsonb not null,
   updated_at timestamptz not null default now()
 );
