@@ -144,6 +144,7 @@ const SessionsModule = {
                 <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">${session.isSpecial && session.presaleActive ? 'Preventa especial' : 'Aporte por Sesión'}</span>
                 <span class="text-xl font-extrabold text-pink-400 font-heading">$${session.price.toLocaleString('es-CO')} <span class="text-xs font-normal text-slate-400">COP</span></span>
                 ${session.isSpecial ? `<span class="text-[10px] ${session.presaleActive ? 'text-amber-300' : 'text-slate-400'} block mt-0.5">${session.presaleActive ? `Hasta ${new Date(session.presaleEndsOn + 'T00:00:00').toLocaleDateString('es-CO', { day:'numeric', month:'short' })} · luego ${SessionsModule.money(session.regularPrice)}` : 'Precio regular de la masterclass'}</span>` : ''}
+                ${session.isSpecial ? '<span class="text-[10px] text-amber-200 font-bold block mt-1">Pago individual · no incluida en la ticketera</span>' : ''}
               </div>
               <div class="text-right">
                 <span class="text-xs font-semibold ${isFull ? 'text-red-400' : 'text-emerald-400'} flex items-center gap-1 justify-end">
