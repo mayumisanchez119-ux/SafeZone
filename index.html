@@ -53,7 +53,7 @@
               <span class="text-xl sm:text-2xl font-black text-white tracking-wider font-heading uppercase">SAFE ZONE</span>
               <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-md shadow-pink-600/30">CLUB</span>
             </div>
-            <span class="text-[11px] text-pink-300 font-semibold tracking-widest uppercase">Defensa • Boxeo • Taekwondo</span>
+            <span class="text-[11px] text-pink-300 font-semibold tracking-widest uppercase">Hapkido • Taekwondo • Boxeo</span>
           </div>
         </div>
 
@@ -81,6 +81,12 @@
             class="px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-2 cursor-pointer">
             <i data-lucide="award" class="w-4 h-4"></i>
             <span>Profesores</span>
+          </button>
+
+          <button onclick="App.switchTab('gallery')" data-nav="gallery"
+            class="px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-2 cursor-pointer">
+            <i data-lucide="images" class="w-4 h-4"></i>
+            <span>Encuentros Reales</span>
           </button>
 
           <button onclick="App.switchTab('instructor-portal')" data-nav="instructor-portal"
@@ -126,6 +132,10 @@
         <i data-lucide="award" class="w-4 h-4"></i>
         <span>Profes</span>
       </button>
+      <button onclick="App.switchTab('gallery')" data-nav="gallery" class="flex flex-col items-center gap-1 text-slate-400 px-2">
+        <i data-lucide="images" class="w-4 h-4"></i>
+        <span>Galería</span>
+      </button>
       <button onclick="App.switchTab('instructor-portal')" data-nav="instructor-portal" class="flex flex-col items-center gap-1 text-slate-400 px-2">
         <i data-lucide="shield-check" class="w-4 h-4"></i>
         <span>Admin</span>
@@ -154,7 +164,8 @@
           </h1>
 
           <p class="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl">
-            Aprende <strong class="text-pink-400">Defensa Personal Urbana</strong>, <strong class="text-rose-400">Boxeo</strong> y <strong class="text-purple-400">Taekwondo</strong> en un ambiente seguro, profesional y motivador. Encuentros prácticos guiados por instructores certificados, aporte de <strong class="text-white font-bold">$10.000 COP por sesión</strong> o combos con <strong class="text-pink-400 font-bold">Código Único y 60 días de vigencia</strong>.
+            Somos una comunidad de mujeres en Bogotá.<br>
+            Enseñamos defensa personal, a través de <strong class="text-pink-400">Hapkido</strong>, <strong class="text-purple-400">Taekwondo</strong> y <strong class="text-rose-400">Boxeo Fitness</strong> con instructores certificados.
           </p>
 
           <!-- Quick Benefits Pills -->
@@ -210,7 +221,7 @@
               <!-- Mini Stats -->
               <div class="grid grid-cols-3 gap-2 w-full mt-5 pt-4 border-t border-slate-800 text-center">
                 <div class="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
-                  <span class="text-pink-400 font-extrabold text-base block font-heading">3</span>
+                  <span class="text-pink-400 font-extrabold text-base block font-heading">4</span>
                   <span class="text-[10px] text-slate-400 uppercase">Disciplinas</span>
                 </div>
                 <div class="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
@@ -348,6 +359,18 @@
       </div>
     </section>
 
+    <!-- TAB: GALERÍA DE ENCUENTROS REALES -->
+    <section id="tab-gallery" class="hidden">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-7">
+        <div>
+          <span class="text-xs font-black uppercase tracking-widest text-pink-400">Comunidad Safe Zone</span>
+          <h2 class="text-2xl sm:text-3xl font-black text-white font-heading mt-1">Encuentros Reales</h2>
+          <p class="text-sm text-slate-400 mt-1">Momentos de nuestra comunidad entrenando, aprendiendo y creciendo juntas.</p>
+        </div>
+      </div>
+      <div id="gallery-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+    </section>
+
     <!-- TAB 5: PORTAL ADMINISTRADORA & PROFESORES (HOJA DE PAGOS Y HORARIOS) -->
     <section id="tab-instructor-portal" class="hidden">
       <div id="instructor-portal-container">
@@ -429,6 +452,7 @@
             <li><a href="#" onclick="SessionsModule.setFilter('defensa-personal'); App.switchTab('sessions');" class="hover:text-pink-400 transition-colors">🛡️ Defensa Personal Urbana</a></li>
             <li><a href="#" onclick="SessionsModule.setFilter('boxeo'); App.switchTab('sessions');" class="hover:text-rose-400 transition-colors">🥊 Boxeo Olímpico</a></li>
             <li><a href="#" onclick="SessionsModule.setFilter('taekwondo'); App.switchTab('sessions');" class="hover:text-purple-400 transition-colors">🥋 Taekwondo WT</a></li>
+            <li><a href="#" onclick="SessionsModule.setFilter('hapkido'); App.switchTab('sessions');" class="hover:text-pink-400 transition-colors">🥋 Hapkido</a></li>
           </ul>
         </div>
 
@@ -457,6 +481,7 @@
   <script src="js/sessions.js?v=20260917.3"></script>
   <script src="js/instructor.js?v=20260917.4"></script>
   <script src="js/teacher-portal.js?v=20260917.2"></script>
+  <script src="js/gallery.js?v=20261012.1"></script>
   <script src="js/app.js?v=20260917.1"></script>
 <script src="js/safezone-sync.js?v=20260917.1"></script><script src="js/safezone-save-fix.js?v=20260917.1"></script>
 <script src="js/ratings.js?v=20260908.7"></script>
