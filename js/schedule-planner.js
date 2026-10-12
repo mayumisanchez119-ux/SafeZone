@@ -60,7 +60,7 @@ const SchedulePlanner = {
       <div class="grid grid-cols-7 gap-2">${'<div aria-hidden="true"></div>'.repeat(offset)}${Array.from({length:days},(_,index)=>{
         const day=index+1, date=`${prefix}-${String(day).padStart(2,'0')}`, items=rows.filter(r=>r.class_date===date);
         return `<div class="rounded-xl border ${date===SchedulePlanner.today()?'border-pink-400':'border-slate-800'} bg-slate-950/70 p-2 flex flex-col gap-2" style="min-height:125px"><span class="text-sm font-bold ${date===SchedulePlanner.today()?'text-pink-400':'text-slate-300'}">${day}${date===SchedulePlanner.today()?' · HOY':''}</span>
-        ${items.map(r=>`<div class="p-2 rounded-lg bg-pink-500/10 border border-pink-500/30"><p class="text-xs font-bold text-pink-300">${E(r.start_time.slice(0,5))}–${E(r.end_time.slice(0,5))}</p><p class="text-[10px] text-slate-300 break-words">${E(r.location)}</p><button type="button" data-schedule-id="${E(r.id)}" onclick="SchedulePlanner.confirmDelete('${scope}',this.dataset.scheduleId)" aria-label="Eliminar clase del ${date} a las ${E(r.start_time.slice(0,5))}" class="mt-2 w-full py-1.5 rounded-md border border-red-500/40 text-red-300 text-[10px] hover:bg-red-950">Eliminar clase</button></div>`).join('') || '<span class="text-[10px] text-slate-500 italic">Libre</span>'}
+        ${items.map(r=>`<div class="p-2 rounded-lg bg-pink-500/10 border border-pink-500/30"><p class="text-xs font-bold text-pink-300">${E(r.start_time.slice(0,5))}–${E(r.end_time.slice(0,5))}</p><p class="text-[10px] text-slate-300 break-words">${E(r.location)}</p>${scope === 'admin' ? `<button type="button" data-schedule-id="${E(r.id)}" onclick="SchedulePlanner.copyWhatsAppMessage(this.dataset.scheduleId)" aria-label="Copiar mensaje de WhatsApp de la clase del ${date} a las ${E(r.start_time.slice(0,5))}" class="mt-2 w-full py-1.5 rounded-md border border-emerald-500/40 text-emerald-200 text-[10px] hover:bg-emerald-950/50">Copiar mensaje para WhatsApp</button>` : ''}<button type="button" data-schedule-id="${E(r.id)}" onclick="SchedulePlanner.confirmDelete('${scope}',this.dataset.scheduleId)" aria-label="Eliminar clase del ${date} a las ${E(r.start_time.slice(0,5))}" class="mt-2 w-full py-1.5 rounded-md border border-red-500/40 text-red-300 text-[10px] hover:bg-red-950">Eliminar clase</button></div>`).join('') || '<span class="text-[10px] text-slate-500 italic">Libre</span>'}
         <button type="button" ${date<SchedulePlanner.today()?'disabled':''} onclick="SchedulePlanner.open('${scope}','${date}')" aria-label="Programar clase el ${date}" class="mt-auto py-2 rounded-md bg-slate-900 hover:bg-pink-600 disabled:opacity-30 text-slate-300 hover:text-white text-[10px] font-bold">+ Dictar</button></div>`;
       }).join('')}</div></div></div><p class="text-xs text-slate-500 mt-4">En celular puedes deslizar el calendario hacia los lados. Cada clase tiene su propio botón para eliminar.</p></div>`;
   },
@@ -82,6 +82,50 @@ const SchedulePlanner = {
     const modal=document.getElementById('details-modal'); modal.classList.remove('hidden');modal.classList.add('flex');
   },
   close() { if(!SchedulePlanner.busy) InstructorModule.closeDetailsModal(); },
+  formatDateForMessage(date) {
+    const [year, month, day] = String(date).split('-').map(Number);
+    if (!year || !month || !day) return String(date || 'Por confirmar');
+    return new Intl.DateTimeFormat('es-CO', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Bogota'
+    }).format(new Date(Date.UTC(year, month - 1, day)));
+  },
+  enrollmentLink() {
+    // Conserva el dominio desde el que se abrió el portal para que el mensaje
+    // lleve a la misma publicación que está usando la administradora.
+    return window.location.href.split('#')[0];
+  },
+  async copyWhatsAppMessage(id) {
+    const row = Storage.getTeacherSchedules().find(item => item.id === id);
+    if (!row) { App.showToast('No encontramos esta clase. Actualiza el calendario e inténtalo de nuevo.'); return; }
+    const disciplineNames = { 'defensa-personal': 'Defensa Personal', boxeo: 'Boxeo', taekwondo: 'Taekwondo', hapkido: 'Hapkido' };
+    const discipline = disciplineNames[row.discipline] || row.discipline || 'Entrenamiento marcial';
+    const message = [
+      '🥋 *Nueva clase SAFE ZONE CLUB*',
+      '',
+      `📅 *Fecha:* ${SchedulePlanner.formatDateForMessage(row.class_date)}`,
+      `🕒 *Horario:* ${String(row.start_time || '').slice(0, 5)}–${String(row.end_time || '').slice(0, 5)}`,
+      `📍 *Lugar:* ${row.location || 'Por confirmar'}`,
+      `🥊 *Disciplina:* ${discipline}`,
+      `👤 *Profesora:* ${row.instructor_name || 'Equipo Safe Zone'}`,
+      `👥 *Cupos:* ${row.capacity || 'Por confirmar'}`,
+      '',
+      'Para inscribirte, entra aquí:',
+      SchedulePlanner.enrollmentLink(),
+      '',
+      '¡Te esperamos! 💗'
+    ].join('\n');
+    try {
+      if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(message);
+      else {
+        const helper = document.createElement('textarea');
+        helper.value = message; helper.style.position = 'fixed'; helper.style.opacity = '0';
+        document.body.appendChild(helper); helper.select(); document.execCommand('copy'); helper.remove();
+      }
+      App.showToast('Mensaje para WhatsApp copiado. Ya puedes pegarlo en tu grupo.');
+    } catch (_) {
+      App.showToast('No se pudo copiar automáticamente. Revisa los permisos del navegador.');
+    }
+  },
   validate(data) {
     if(!/^\d{4}-\d{2}-\d{2}$/.test(data.class_date)||data.class_date<SchedulePlanner.today()) throw new Error('Selecciona una fecha de hoy en adelante.');
     if(!/^\d{2}:\d{2}$/.test(data.start_time)||!/^\d{2}:\d{2}$/.test(data.end_time)||data.end_time<=data.start_time) throw new Error('La hora de fin debe ser posterior a la hora de inicio.');
