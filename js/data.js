@@ -241,21 +241,42 @@ const Storage = {
   getSessions: () => {
     const data = localStorage.getItem('safezone_sessions');
     const sessions = (data ? JSON.parse(data) : DEFAULT_SESSIONS).filter(session => !['ses-1', 'ses-2', 'ses-3'].includes(session.id));
-    const teacherSessions = Storage.getTeacherSchedules().map(schedule => ({
-      id: `teacher-${schedule.id}`,
-      discipline: schedule.discipline,
-      title: schedule.title,
-      instructorId: schedule.instructor_id,
-      instructorName: schedule.instructor_name,
-      instructorAvatar: schedule.instructor_avatar,
-      date: schedule.class_date,
-      time: `${schedule.start_time.slice(0, 5)} - ${schedule.end_time.slice(0, 5)}`,
-      recurrence: 'once', recurrenceLabel: 'Programada por Profesores',
-      location: { name: schedule.location, address: schedule.location, zone: 'Bogotá D.C.' },
-      price: 10000, capacity: schedule.capacity, attendees: [], level: 'Todos los niveles',
-      requirements: ['Ropa deportiva', 'Hidratación'],
-      description: `Sesión programada por ${schedule.instructor_name}.`
-    }));
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    const teacherSessions = Storage.getTeacherSchedules().map(schedule => {
+      const special = schedule.class_kind === 'special';
+      const specialData = typeof schedule.special_data === 'string'
+        ? (() => { try { return JSON.parse(schedule.special_data); } catch (_) { return {}; } })()
+        : (schedule.special_data || {});
+      const instructors = Array.isArray(specialData.instructors) ? specialData.instructors : [];
+      const presaleActive = special && specialData.presale_ends_on >= today;
+      const price = special
+        ? Number(presaleActive ? specialData.presale_price : specialData.regular_price)
+        : 10000;
+      const instructorNames = instructors.map(item => item.name).filter(Boolean);
+      return {
+        id: `teacher-${schedule.id}`,
+        discipline: special ? 'especial' : schedule.discipline,
+        title: schedule.title,
+        instructorId: schedule.instructor_id,
+        instructorName: special ? (instructorNames.join(' · ') || 'Equipo Safe Zone') : schedule.instructor_name,
+        instructorAvatar: schedule.instructor_avatar,
+        instructors,
+        date: schedule.class_date,
+        time: `${String(schedule.start_time || '').slice(0, 5)} - ${String(schedule.end_time || '').slice(0, 5)}`,
+        recurrence: 'once', recurrenceLabel: special ? 'Masterclass especial' : 'Programada por Profesores',
+        location: { name: schedule.location, address: schedule.location, zone: 'Bogotá D.C.' },
+        price: Number.isFinite(price) && price >= 0 ? price : 0,
+        regularPrice: special ? Number(specialData.regular_price) : null,
+        presaleEndsOn: special ? specialData.presale_ends_on : null,
+        presaleActive,
+        isSpecial: special,
+        capacity: schedule.capacity, attendees: [], level: 'Todos los niveles',
+        requirements: ['Ropa deportiva', 'Hidratación'],
+        description: special
+          ? (specialData.description || `Masterclass especial con ${instructorNames.join(', ') || 'el equipo Safe Zone'}.`)
+          : `Sesión programada por ${schedule.instructor_name}.`
+      };
+    });
     const ids = new Set(teacherSessions.map(session => session.id));
     return [...teacherSessions, ...sessions.filter(session => !ids.has(session.id))];
   },

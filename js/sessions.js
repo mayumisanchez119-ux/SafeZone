@@ -6,10 +6,11 @@ const SessionsModule = {
   currentFilter: 'all',
   searchQuery: '',
   singleClassReceiptBase64: null,
+  money: amount => `$${Number(amount || 0).toLocaleString('es-CO')} COP`,
 
   setFilter: (filter) => {
     SessionsModule.currentFilter = filter;
-    
+
     const buttons = document.querySelectorAll('.filter-btn');
     buttons.forEach(btn => {
       const isTarget = btn.getAttribute('data-filter') === filter;
@@ -35,10 +36,10 @@ const SessionsModule = {
     if (!container) return;
 
     const allSessions = Storage.getSessions();
-    
+
     const filtered = allSessions.filter(session => {
       const matchesFilter = SessionsModule.currentFilter === 'all' || session.discipline === SessionsModule.currentFilter;
-      const matchesSearch = !SessionsModule.searchQuery || 
+      const matchesSearch = !SessionsModule.searchQuery ||
         session.title.toLowerCase().includes(SessionsModule.searchQuery) ||
         session.location.name.toLowerCase().includes(SessionsModule.searchQuery) ||
         session.instructorName.toLowerCase().includes(SessionsModule.searchQuery) ||
@@ -57,7 +58,7 @@ const SessionsModule = {
           </div>
           <h4 class="text-lg font-bold text-white mb-2">No se encontraron sesiones</h4>
           <p class="text-sm text-slate-400 max-w-md mx-auto mb-4">Intenta cambiar los filtros de disciplina o el término de búsqueda.</p>
-          <button onclick="SessionsModule.setFilter('all'); document.getElementById('search-input').value = ''; SessionsModule.handleSearch('');" 
+          <button onclick="SessionsModule.setFilter('all'); document.getElementById('search-input').value = ''; SessionsModule.handleSearch('');"
             class="px-5 py-2 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold transition-all cursor-pointer">
             Restablecer Filtros
           </button>
@@ -76,7 +77,11 @@ const SessionsModule = {
       let disciplineLabel = 'Defensa Personal';
       let disciplineIcon = 'shield';
 
-      if (session.discipline === 'boxeo') {
+      if (session.isSpecial) {
+        badgeClass = 'bg-amber-500/15 text-amber-200 border border-amber-500/50';
+        disciplineLabel = 'Masterclass especial';
+        disciplineIcon = 'sparkles';
+      } else if (session.discipline === 'boxeo') {
         badgeClass = 'badge-boxeo';
         disciplineLabel = 'Boxeo';
         disciplineIcon = 'swords';
@@ -127,7 +132,7 @@ const SessionsModule = {
             <div class="flex items-center gap-3 p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 mb-5">
               <img src="${session.instructorAvatar}" alt="${session.instructorName}" class="w-9 h-9 rounded-full object-cover border border-pink-500/50">
               <div class="min-w-0">
-                <span class="text-[10px] uppercase text-slate-400 font-bold block">Profesor Safe Zone</span>
+                <span class="text-[10px] uppercase text-slate-400 font-bold block">${session.isSpecial ? 'Equipo Safe Zone' : 'Profesor Safe Zone'}</span>
                 <span class="text-xs font-semibold text-white truncate block">${session.instructorName}</span>
               </div>
             </div>
@@ -136,8 +141,9 @@ const SessionsModule = {
           <div class="pt-4 border-t border-slate-800/80">
             <div class="flex items-center justify-between mb-3">
               <div>
-                <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Aporte por Sesión</span>
+                <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">${session.isSpecial && session.presaleActive ? 'Preventa especial' : 'Aporte por Sesión'}</span>
                 <span class="text-xl font-extrabold text-pink-400 font-heading">$${session.price.toLocaleString('es-CO')} <span class="text-xs font-normal text-slate-400">COP</span></span>
+                ${session.isSpecial ? `<span class="text-[10px] ${session.presaleActive ? 'text-amber-300' : 'text-slate-400'} block mt-0.5">${session.presaleActive ? `Hasta ${new Date(session.presaleEndsOn + 'T00:00:00').toLocaleDateString('es-CO', { day:'numeric', month:'short' })} · luego ${SessionsModule.money(session.regularPrice)}` : 'Precio regular de la masterclass'}</span>` : ''}
               </div>
               <div class="text-right">
                 <span class="text-xs font-semibold ${isFull ? 'text-red-400' : 'text-emerald-400'} flex items-center gap-1 justify-end">
@@ -151,12 +157,12 @@ const SessionsModule = {
             </div>
 
             <div class="grid grid-cols-2 gap-2">
-              <button type="button" onclick="SessionsModule.openDetailsModal('${session.id}')" 
+              <button type="button" onclick="SessionsModule.openDetailsModal('${session.id}')"
                 class="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer border border-slate-800">
                 <i data-lucide="info" class="w-3.5 h-3.5 text-slate-400"></i>
                 <span>Detalles</span>
               </button>
-              
+
               <button type="button" onclick="SessionsModule.openRegisterModal('${session.id}')" ${isFull ? 'disabled' : ''}
                 class="py-2.5 px-3 rounded-xl ${isFull ? 'bg-slate-900 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-pink-600 via-rose-600 to-fuchsia-600 hover:from-pink-500 hover:via-rose-500 hover:to-fuchsia-500 text-white shadow-md shadow-pink-600/30'} text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer">
                 <i data-lucide="check" class="w-3.5 h-3.5"></i>
@@ -188,7 +194,7 @@ const SessionsModule = {
         <div class="flex items-start justify-between gap-4 pb-4 border-b border-slate-800 mb-6">
           <div>
             <span class="text-xs font-bold text-pink-400 uppercase tracking-wider bg-pink-950/70 px-2.5 py-1 rounded border border-pink-800/40 inline-block mb-2">
-              ${session.discipline.toUpperCase()} • ${session.recurrenceLabel || 'PROGRAMADA'}
+              ${session.isSpecial ? '✦ MASTERCLASS ESPECIAL' : `${session.discipline.toUpperCase()} • ${session.recurrenceLabel || 'PROGRAMADA'}`}
             </span>
             <h3 class="text-xl sm:text-2xl font-bold text-white font-heading">${session.title}</h3>
           </div>
@@ -217,8 +223,8 @@ const SessionsModule = {
             </div>
 
             <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-              <span class="text-slate-400 block mb-1">🥋 Cobertura SAFE ZONE:</span>
-              <span class="text-pink-400 font-bold text-sm">Válido con Pase Universal o Pase ${session.discipline.toUpperCase()}</span>
+              <span class="text-slate-400 block mb-1">${session.isSpecial ? '✨ Inscripción:' : '🥋 Cobertura SAFE ZONE:'}</span>
+              <span class="text-pink-400 font-bold text-sm">${session.isSpecial ? 'Pago individual · no usa códigos ni tickets de combos' : `Válido con Pase Universal o Pase ${session.discipline.toUpperCase()}`}</span>
             </div>
 
             <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
@@ -238,21 +244,23 @@ const SessionsModule = {
             </div>
           </div>
 
+          ${session.isSpecial ? `<div class="p-4 rounded-xl bg-amber-500/5 border border-amber-500/30"><span class="text-[10px] uppercase text-amber-300 font-bold">Precio de la masterclass</span><p class="text-lg font-black text-white mt-1">${SessionsModule.money(session.price)}${session.presaleActive ? ' · Preventa activa' : ''}</p>${session.presaleActive ? `<p class="text-xs text-slate-400 mt-1">Hasta ${new Date(session.presaleEndsOn + 'T00:00:00').toLocaleDateString('es-CO', {day:'numeric',month:'long'})}; después ${SessionsModule.money(session.regularPrice)}.</p>` : ''}</div>` : ''}
+
           <div class="p-4 rounded-xl bg-slate-950/90 border border-slate-800 flex items-center gap-4">
             <img src="${session.instructorAvatar}" alt="${session.instructorName}" class="w-12 h-12 rounded-full object-cover border border-pink-500">
             <div>
-              <span class="text-[10px] uppercase text-pink-400 font-bold">Instructor Safe Zone</span>
+              <span class="text-[10px] uppercase text-pink-400 font-bold">${session.isSpecial ? 'Profesores de la masterclass' : 'Instructor Safe Zone'}</span>
               <h5 class="text-white font-bold text-sm">${session.instructorName}</h5>
-              <p class="text-xs text-slate-400">Acompañamiento personalizado y corrección de técnica paso a paso.</p>
+              <p class="text-xs text-slate-400">${session.isSpecial ? 'Una clase especial con toda la comunidad Safe Zone.' : 'Acompañamiento personalizado y corrección de técnica paso a paso.'}</p>
             </div>
           </div>
 
           <div class="pt-4 flex items-center justify-between border-t border-slate-800">
             <div>
-              <span class="text-xs text-slate-400 block">Aporte individual:</span>
+              <span class="text-xs text-slate-400 block">${session.isSpecial ? 'Inscripción especial:' : 'Aporte individual:'}</span>
               <span class="text-2xl font-extrabold text-pink-400 font-heading">$${session.price.toLocaleString('es-CO')} COP</span>
             </div>
-            <button onclick="SessionsModule.closeDetailsModal(); SessionsModule.openRegisterModal('${session.id}')" 
+            <button onclick="SessionsModule.closeDetailsModal(); SessionsModule.openRegisterModal('${session.id}')"
               class="py-3 px-6 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-fuchsia-600 hover:from-pink-500 hover:via-rose-500 hover:to-fuchsia-500 text-white font-bold text-sm shadow-lg shadow-pink-600/30 transition-all flex items-center gap-2 cursor-pointer">
               <i data-lucide="check" class="w-4 h-4"></i>
               <span>Inscribirme Ahora</span>
@@ -303,63 +311,63 @@ const SessionsModule = {
           </button>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 mb-6">
-          <button type="button" id="tab-btn-code" onclick="SessionsModule.switchRegMethod('code')" 
+        ${session.isSpecial ? `<div class="mb-6 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/40 text-xs"><p class="font-black text-amber-200">✦ Masterclass especial</p><p class="text-slate-300 mt-1">Esta actividad no está incluida en la ticketera ni acepta códigos de combos. Inscríbete con pago individual por ${SessionsModule.money(session.price)}.</p></div>` : `<div class="grid grid-cols-2 gap-2 mb-6">
+          <button type="button" id="tab-btn-code" onclick="SessionsModule.switchRegMethod('code')"
             class="py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-600 to-rose-600 text-white font-bold text-xs shadow-md shadow-pink-600/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer">
             <i data-lucide="ticket" class="w-4 h-4"></i>
             <span>Tengo Código Único</span>
           </button>
-          <button type="button" id="tab-btn-single" onclick="SessionsModule.switchRegMethod('single')" 
+          <button type="button" id="tab-btn-single" onclick="SessionsModule.switchRegMethod('single')"
             class="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer">
             <i data-lucide="dollar-sign" class="w-4 h-4"></i>
             <span>Pagar $10.000 COP</span>
           </button>
-        </div>
+        </div>`}
 
         <form onsubmit="SessionsModule.processRegistration(event, '${session.id}')" class="space-y-4">
           <div>
             <label class="block text-xs font-semibold text-slate-300 mb-1.5">Nombre Completo de la Alumna *</label>
-            <input type="text" id="reg-name" required placeholder="Ej: Mariana Torres" 
+            <input type="text" id="reg-name" required placeholder="Ej: Mariana Torres"
               class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:border-pink-500 focus:outline-none">
           </div>
 
           <div>
             <label class="block text-xs font-semibold text-slate-300 mb-1.5">WhatsApp / Celular *</label>
-            <input type="tel" id="reg-phone" required placeholder="Ej: 3001234567" 
+            <input type="tel" id="reg-phone" required placeholder="Ej: 3001234567"
               class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:border-pink-500 focus:outline-none">
           </div>
 
           <!-- OPCIÓN A: CANJE CON CÓDIGO ÚNICO -->
-          <div id="section-reg-code" class="p-4 rounded-2xl bg-gradient-to-br from-pink-950/30 via-slate-950 to-slate-950 border border-pink-500/40 space-y-3">
+          ${session.isSpecial ? '' : `<div id="section-reg-code" class="p-4 rounded-2xl bg-gradient-to-br from-pink-950/30 via-slate-950 to-slate-950 border border-pink-500/40 space-y-3">
             <div class="flex items-center justify-between">
               <label class="block text-xs font-bold text-pink-300 uppercase tracking-wide">Código Único de Ticketera *</label>
               <span class="text-[11px] text-emerald-400 font-bold">Paga $0 COP</span>
             </div>
-            
+
             <div class="flex gap-2">
               <div class="relative flex-grow flex items-center">
-                <input type="text" id="reg-unique-code" placeholder="Ej: SZ-88210" 
+                <input type="text" id="reg-unique-code" placeholder="Ej: SZ-88210"
                   class="w-full pl-3 pr-20 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white font-mono text-sm focus:border-pink-500 focus:outline-none uppercase">
-                <button type="button" onclick="TicketsModule.pasteCodeIntoInput('reg-unique-code')" 
+                <button type="button" onclick="TicketsModule.pasteCodeIntoInput('reg-unique-code')"
                   class="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-pink-400 text-xs font-bold border border-pink-500/30 flex items-center gap-1 cursor-pointer" title="Pegar código copiado">
                   <i data-lucide="clipboard" class="w-3 h-3"></i>
                   <span>Pegar</span>
                 </button>
               </div>
-              
-              <button type="button" onclick="SessionsModule.checkCodeAvailability('${session.discipline}')" 
+
+              <button type="button" onclick="SessionsModule.checkCodeAvailability('${session.id}')"
                 class="px-4 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold shrink-0 cursor-pointer shadow-md">
                 Verificar
               </button>
             </div>
             <div id="code-feedback-msg" class="text-xs hidden"></div>
-          </div>
+          </div>`}
 
           <!-- OPCIÓN B: PAGO INDIVIDUAL CON COMPROBANTE -->
-          <div id="section-reg-single" class="hidden p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+          <div id="section-reg-single" class="${session.isSpecial ? '' : 'hidden'} p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
             <div class="flex items-center justify-between text-xs pb-2 border-b border-slate-800">
-              <span class="font-bold text-white">Transferencia de Aporte Individual</span>
-              <span class="font-extrabold text-pink-400">$10.000 COP</span>
+              <span class="font-bold text-white">${session.isSpecial ? 'Transferencia para masterclass' : 'Transferencia de Aporte Individual'}</span>
+              <span class="font-extrabold text-pink-400">${SessionsModule.money(session.price)}</span>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-slate-300">
               <div class="p-2 rounded-lg bg-slate-900 border border-slate-800">🟣 Nequi: <strong>300 834 2306</strong></div>
@@ -367,20 +375,20 @@ const SessionsModule = {
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1">Adjuntar Foto del Comprobante ($10.000 COP) *</label>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Adjuntar Foto del Comprobante (${SessionsModule.money(session.price)}) *</label>
               <div class="p-3 rounded-xl bg-slate-900 border-2 border-dashed border-slate-700 hover:border-pink-500 transition-colors text-center relative cursor-pointer">
-                <input type="file" id="single-receipt-file" accept="image/*" onchange="SessionsModule.handleSingleReceiptUpload(event)" 
+                <input type="file" id="single-receipt-file" accept="image/*" onchange="SessionsModule.handleSingleReceiptUpload(event)"
                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
                 <div id="single-receipt-msg" class="text-xs text-slate-400">
                   <i data-lucide="upload" class="w-4 h-4 text-pink-400 mx-auto mb-1"></i>
-                  <span>Haz clic para subir foto del pago de $10.000</span>
+                  <span>Haz clic para subir foto del pago de ${SessionsModule.money(session.price)}</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="pt-2">
-            <button type="submit" 
+            <button type="submit"
               class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-fuchsia-600 hover:from-pink-500 hover:via-rose-500 hover:to-fuchsia-500 text-white font-bold text-sm shadow-lg shadow-pink-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer">
               <i data-lucide="check-circle" class="w-5 h-5"></i>
               <span>Confirmar Reserva de Cupo</span>
@@ -401,6 +409,7 @@ const SessionsModule = {
     const secCode = document.getElementById('section-reg-code');
     const secSingle = document.getElementById('section-reg-single');
 
+    if (!btnCode || !btnSingle || !secCode || !secSingle) return;
     if (method === 'code') {
       btnCode.className = 'py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-600 to-rose-600 text-white font-bold text-xs shadow-md shadow-pink-600/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer';
       btnSingle.className = 'py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer';
@@ -429,10 +438,16 @@ const SessionsModule = {
     reader.readAsDataURL(file);
   },
 
-  checkCodeAvailability: (sessionDiscipline) => {
+  checkCodeAvailability: (sessionId) => {
     const codeInput = document.getElementById('reg-unique-code');
     const feedback = document.getElementById('code-feedback-msg');
     if (!codeInput || !feedback) return;
+    const session = Storage.getSessions().find(item => item.id === sessionId);
+    if (session?.isSpecial) {
+      feedback.textContent = '❌ Esta masterclass especial no acepta códigos ni tickets de combos.';
+      feedback.className = 'text-xs text-red-400 font-semibold block';
+      return;
+    }
 
     const code = codeInput.value.trim().toUpperCase();
     if (!code) {
@@ -460,7 +475,7 @@ const SessionsModule = {
       return;
     }
 
-    if (tx.discipline !== 'all' && tx.discipline !== sessionDiscipline) {
+    if (tx.discipline !== 'all' && tx.discipline !== session?.discipline) {
       feedback.textContent = `❌ Este código es exclusivo de ${tx.discipline.toUpperCase()} y no aplica para esta clase.`;
       feedback.className = 'text-xs text-red-400 font-semibold block';
       return;
@@ -486,7 +501,8 @@ const SessionsModule = {
 
     const name = document.getElementById('reg-name').value.trim();
     const phone = document.getElementById('reg-phone').value.trim();
-    const isCodeMode = !document.getElementById('section-reg-code').classList.contains('hidden');
+    const codeSection = document.getElementById('section-reg-code');
+    const isCodeMode = !session.isSpecial && codeSection && !codeSection.classList.contains('hidden');
 
     if (isCodeMode) {
       const code = document.getElementById('reg-unique-code').value.trim().toUpperCase();
@@ -497,6 +513,7 @@ const SessionsModule = {
         return;
       }
 
+      if (session.isSpecial) { alert('Esta masterclass especial no admite códigos de ticketera.'); return; }
       if (tx.discipline !== 'all' && tx.discipline !== session.discipline) { alert(`Este código es exclusivo de ${tx.discipline.toUpperCase()} y no puede usarse para una clase de ${session.discipline.toUpperCase()}.`); return; } tx.remainingTickets -= 1;
       tx.history.push({
         action: "Redención de Ticket",
@@ -532,7 +549,7 @@ const SessionsModule = {
       const newTx = {
         id: "tx-" + Math.random().toString(36).substring(2, 9),
         uniqueCode: uniqueCode,
-        type: "single_class",
+        type: session.isSpecial ? "special_class" : "single_class",
         sessionId: session.id,
         sessionDate: session.date,
         sessionTime: session.time,
@@ -554,7 +571,7 @@ const SessionsModule = {
         remainingTickets: 0,
         history: [
           {
-            action: "Pago de Clase Individual",
+            action: session.isSpecial ? "Pago de Masterclass Especial" : "Pago de Clase Individual",
             detail: `Comprobante de $${(session.price || 10000).toLocaleString('es-CO')} COP recibido para ${session.title} (${session.date} - ${session.time}). En espera de verificación.`,
             date: new Date().toISOString()
           }
