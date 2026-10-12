@@ -36,6 +36,9 @@ const TicketsModule = {
       if (TicketsModule.currentComboFilter === 'universal') return combo.discipline === 'all';
       return combo.discipline === TicketsModule.currentComboFilter;
     });
+    // Si existe una sola oferta, se muestra como la oferta destacada principal.
+    // Al agregar más combos, se conserva automáticamente la cuadrícula adaptable.
+    const isOnlyCombo = combos.length === 1 && filtered.length === 1;
 
     container.innerHTML = filtered.map(combo => {
       let scopeBadge = ""; const comboInstructor = combo.discipline === 'all' ? null : instructors.find(inst => (inst.disciplines?.length ? inst.disciplines : [inst.discipline]).some(discipline => String(discipline).trim().toLowerCase() === combo.discipline));
@@ -58,39 +61,24 @@ const TicketsModule = {
       }
 
       return `
-        <div class="glass-card glass-card-hover rounded-2xl p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden group border border-slate-800">
+        <div class="glass-card glass-card-hover rounded-2xl p-6 sm:p-8 relative overflow-hidden group border border-slate-800 ${isOnlyCombo ? 'col-span-full grid grid-cols-1 lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)] gap-7 lg:gap-10 lg:items-center' : 'flex flex-col justify-between'}">
           <div class="absolute top-4 right-4">
             <span class="${combo.badgeColor} text-white text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-lg shadow-pink-600/20">
               ${combo.badge}
             </span>
           </div>
 
-          <div>
+          <div class="${isOnlyCombo ? 'lg:py-2' : ''}">
             <div class="mb-3">
               ${scopeBadge}
             </div>
 
-            <div class="mb-4 pr-16">
-              <h3 class="text-2xl font-bold text-white mb-2 font-heading group-hover:text-pink-400 transition-colors">${combo.title}</h3>
+            <div class="mb-4 pr-16 ${isOnlyCombo ? 'lg:pr-0' : ''}">
+              <h3 class="${isOnlyCombo ? 'text-3xl sm:text-4xl' : 'text-2xl'} font-bold text-white mb-2 font-heading group-hover:text-pink-400 transition-colors">${combo.title}</h3>
               <p class="text-slate-300 text-sm leading-relaxed">${combo.description}</p>${combo.discipline === 'all' ? '' : `<p>Profesor del combo: ${comboInstructor?.name || 'Profesor por asignar'}</p>`}
             </div>
 
-            <div class="my-5 p-4 rounded-xl bg-slate-950/90 border border-pink-900/30 shadow-inner">
-              <div class="flex items-baseline gap-2">
-                <span class="text-3xl sm:text-4xl font-extrabold text-pink-500 font-heading">$${combo.price.toLocaleString('es-CO')}</span>
-                <span class="text-slate-500 text-sm line-through">$${combo.regularPrice.toLocaleString('es-CO')}</span>
-              </div>
-              <div class="mt-2 flex items-center justify-between text-xs">
-                <span class="text-emerald-400 font-semibold flex items-center gap-1">
-                  <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Ahorras $${combo.savings.toLocaleString('es-CO')} COP
-                </span>
-                <span class="text-pink-300 font-semibold bg-pink-950/80 px-2.5 py-0.5 rounded-full border border-pink-800/50 flex items-center gap-1">
-                  <i data-lucide="clock" class="w-3 h-3 text-pink-400"></i> ${combo.validityDays} días de vigencia
-                </span>
-              </div>
-            </div>
-
-            <ul class="space-y-3 mb-8 text-sm text-slate-300">
+            <ul class="space-y-3 ${isOnlyCombo ? 'mb-0' : 'mb-8'} text-sm text-slate-300">
               ${combo.features.map(feat => `
                 <li class="flex items-start gap-2.5">
                   <div class="p-0.5 rounded-full bg-pink-500/20 text-pink-400 mt-0.5 shrink-0">
@@ -102,11 +90,28 @@ const TicketsModule = {
             </ul>
           </div>
 
-          <button type="button" onclick="TicketsModule.openPurchaseModal('${combo.id}')" 
-            class="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-fuchsia-600 hover:from-pink-500 hover:via-rose-500 hover:to-fuchsia-500 text-white font-bold tracking-wide shadow-lg shadow-pink-600/30 transition-all flex items-center justify-center gap-2 group-hover:scale-[1.02] cursor-pointer">
-            <i data-lucide="ticket" class="w-5 h-5"></i>
-            <span>Comprar y Subir Comprobante</span>
-          </button>
+          <div class="${isOnlyCombo ? 'lg:border-l lg:border-pink-900/50 lg:pl-8 xl:pl-10' : ''}">
+            <div class="${isOnlyCombo ? 'mb-5 p-5 sm:p-6' : 'my-5 p-4'} rounded-xl bg-slate-950/90 border border-pink-900/30 shadow-inner">
+              <div class="flex items-baseline gap-2">
+                <span class="${isOnlyCombo ? 'text-4xl sm:text-5xl' : 'text-3xl sm:text-4xl'} font-extrabold text-pink-500 font-heading">$${combo.price.toLocaleString('es-CO')}</span>
+                <span class="text-slate-500 text-sm line-through">$${combo.regularPrice.toLocaleString('es-CO')}</span>
+              </div>
+              <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                <span class="text-emerald-400 font-semibold flex items-center gap-1">
+                  <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Ahorras $${combo.savings.toLocaleString('es-CO')} COP
+                </span>
+                <span class="text-pink-300 font-semibold bg-pink-950/80 px-2.5 py-0.5 rounded-full border border-pink-800/50 flex items-center gap-1">
+                  <i data-lucide="clock" class="w-3 h-3 text-pink-400"></i> ${combo.validityDays} días de vigencia
+                </span>
+              </div>
+            </div>
+
+            <button type="button" onclick="TicketsModule.openPurchaseModal('${combo.id}')"
+              class="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-fuchsia-600 hover:from-pink-500 hover:via-rose-500 hover:to-fuchsia-500 text-white font-bold tracking-wide shadow-lg shadow-pink-600/30 transition-all flex items-center justify-center gap-2 group-hover:scale-[1.02] cursor-pointer">
+              <i data-lucide="ticket" class="w-5 h-5"></i>
+              <span>Comprar y Subir Comprobante</span>
+            </button>
+          </div>
         </div>
       `;
     }).join('');
