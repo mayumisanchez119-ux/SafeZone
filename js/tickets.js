@@ -236,25 +236,30 @@ const TicketsModule = {
     if (window.lucide) lucide.createIcons();
   },
 
-  handleReceiptUpload: (event) => {
+  handleReceiptUpload: async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      TicketsModule.selectedReceiptBase64 = e.target.result;
-      const previewContainer = document.getElementById('receipt-preview-container');
-      const imagePreview = document.getElementById('receipt-image-preview');
-      const imgEl = document.getElementById('preview-img-el');
+    const previewContainer = document.getElementById('receipt-preview-container');
+    const imagePreview = document.getElementById('receipt-image-preview');
+    const imgEl = document.getElementById('preview-img-el');
+    TicketsModule.selectedReceiptBase64 = null;
+    if (previewContainer) previewContainer.innerHTML = '<p class="text-xs text-pink-300 font-bold">Preparando comprobante...</p>';
 
+    try {
+      const prepared = await App.prepareReceiptImage(file);
+      TicketsModule.selectedReceiptBase64 = prepared.dataUrl;
       if (imgEl && imagePreview && previewContainer) {
-        imgEl.src = e.target.result;
+        imgEl.src = prepared.dataUrl;
         previewContainer.classList.add('hidden');
         imagePreview.classList.remove('hidden');
       }
+      App.showToast('Comprobante cargado correctamente. Ya puedes enviar el pago.');
       if (window.lucide) lucide.createIcons();
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+      if (previewContainer) previewContainer.innerHTML = `<p class="text-xs text-red-400 font-bold">${error.message || 'No fue posible cargar el comprobante.'}</p>`;
+      App.showToast(error.message || 'No fue posible cargar el comprobante.');
+    }
   },
 
   closePurchaseModal: () => {
@@ -275,7 +280,11 @@ const TicketsModule = {
     const phone = document.getElementById('buyer-phone').value.trim();
     const paymentMethod = document.getElementById('buyer-payment-method').value;
     
-    const receiptUrl = TicketsModule.selectedReceiptBase64 || "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600";
+    if (!TicketsModule.selectedReceiptBase64) {
+      App.showToast('Adjunta y espera a que se prepare el comprobante antes de enviar el pago.');
+      return;
+    }
+    const receiptUrl = TicketsModule.selectedReceiptBase64;
 
     const randomDigits = Math.floor(10000 + Math.random() * 90000);
     let prefix = "SZ-";
@@ -316,13 +325,19 @@ const TicketsModule = {
       ]
     };
 
-    const transactions = Storage.getTransactions();
-    transactions.unshift(newTx);
-    Storage.saveTransactions(transactions);
+    try {
+      const transactions = Storage.getTransactions();
+      transactions.unshift(newTx);
+      Storage.saveTransactions(transactions);
+    } catch (error) {
+      App.showToast('No fue posible guardar el comprobante. Intenta con una captura más pequeña.');
+      return;
+    }
 
     localStorage.setItem('safezone_last_searched_code', uniqueCode);
 
     TicketsModule.closePurchaseModal();
+    App.showToast('Pago enviado correctamente. Queda pendiente de aprobación.');
     TicketsModule.openSuccessCodeModal(newTx);
   },
 

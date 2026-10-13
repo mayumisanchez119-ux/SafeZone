@@ -130,9 +130,9 @@ const InstructorModule = {
 
     let msg = '';
     if (isSingleClass) {
-      msg = `🛡️ *SAFE ZONE CLUB - CUPO CONFIRMADO* ✅\n\n¡Hola *${tx.studentName}*! Tu pago de *$${tx.amount.toLocaleString('es-CO')} COP* para la clase *${tx.title}* ha sido verificado con éxito.\n\n🎟️ *Tu Código de Entrada es:*\n👉 *${tx.uniqueCode}*\n\n📅 *Fecha:* ${tx.sessionDate || 'Fecha programada'} (${tx.sessionTime || ''})\n📍 *Lugar:* ${tx.sessionLocation || 'Sede Bogotá'}\n\n⚠️ *Recordatorio importante:* Este pase es válido *únicamente para esta clase en la fecha indicada*. En caso de inasistencia, *no habrá reembolso ni reprogramación*.\n\n¡Te esperamos en entrenamiento! 👊✨`;
+      msg = `*SAFE ZONE CLUB - CUPO CONFIRMADO*\n\nHola *${tx.studentName}*. Tu pago de *$${tx.amount.toLocaleString('es-CO')} COP* para la clase *${tx.title}* ha sido verificado.\n\n*Tu código de entrada es:*\n*${tx.uniqueCode}*\n\n*Fecha:* ${tx.sessionDate || 'Fecha programada'} (${tx.sessionTime || ''})\n*Lugar:* ${tx.sessionLocation || 'Sede Bogotá'}\n\n*Recordatorio importante:* Este pase es válido únicamente para esta clase en la fecha indicada. En caso de inasistencia, no habrá reembolso ni reprogramación.\n\nTe esperamos en entrenamiento.`;
     } else {
-      msg = `🛡️ *SAFE ZONE CLUB - PAGO VERIFICADO* ✅\n\n¡Hola *${tx.studentName}*! Tu pago de *$${tx.amount.toLocaleString('es-CO')} COP* por el *${tx.title}* ha sido verificado con éxito.\n\n🎟️ *Tu Código Único de Transacción es:*\n👉 *${tx.uniqueCode}*\n\n📊 *Saldo de Tickets:* ${tx.remainingTickets} tickets listos para usar.\n⏳ *Vigencia:* 60 días continuos a partir de hoy.\n\n🌐 Ya puedes ingresar a la página web de Safe Zone Club y redimir tus cupos en cualquier clase con tu código.\n\n¡Nos vemos en entrenamiento! 👊✨`;
+      msg = `*SAFE ZONE CLUB - PAGO VERIFICADO*\n\nHola *${tx.studentName}*. Tu pago de *$${tx.amount.toLocaleString('es-CO')} COP* por el *${tx.title}* ha sido verificado.\n\n*Tu código único de transacción es:*\n*${tx.uniqueCode}*\n\n*Saldo de tickets:* ${tx.remainingTickets} tickets listos para usar.\n*Vigencia:* 60 días continuos a partir de hoy.\n\nYa puedes ingresar a la página web de Safe Zone Club y redimir tus cupos en cualquier clase con tu código.\n\nNos vemos en entrenamiento.`;
     }
 
     const waUrl = `https://wa.me/57${cleanPhone}?text=${encodeURIComponent(msg)}`;

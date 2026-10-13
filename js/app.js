@@ -117,6 +117,63 @@ const App = {
     }, duration);
   },
 
+  // Los comprobantes llegan desde teléfonos y a menudo pesan varios megabytes.
+  // Reducirlos antes de guardarlos evita que el almacenamiento del navegador se
+  // llene y que el botón de confirmación parezca no hacer nada.
+  prepareReceiptImage: (file, maxBytes = 350 * 1024) => new Promise((resolve, reject) => {
+    if (!file || !String(file.type || '').startsWith('image/')) {
+      reject(new Error('Selecciona una imagen válida del comprobante.'));
+      return;
+    }
+
+    const inputReader = new FileReader();
+    inputReader.onerror = () => reject(new Error('No fue posible leer la imagen del comprobante.'));
+    inputReader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error('No fue posible procesar esta imagen. Intenta con una foto JPG o PNG.'));
+      image.onload = () => {
+        const maxDimension = 1440;
+        const initialScale = Math.min(1, maxDimension / Math.max(image.width, image.height));
+        const canvas = document.createElement('canvas');
+
+        const encode = (scale, quality, attempt) => {
+          canvas.width = Math.max(1, Math.round(image.width * scale));
+          canvas.height = Math.max(1, Math.round(image.height * scale));
+          const context = canvas.getContext('2d');
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              reject(new Error('No fue posible preparar el comprobante.'));
+              return;
+            }
+            if (blob.size > maxBytes && attempt < 5) {
+              encode(scale * 0.78, Math.max(0.5, quality - 0.08), attempt + 1);
+              return;
+            }
+            if (blob.size > maxBytes) {
+              reject(new Error('La foto es demasiado pesada. Usa una captura más pequeña.'));
+              return;
+            }
+
+            const outputReader = new FileReader();
+            outputReader.onerror = () => reject(new Error('No fue posible guardar la imagen preparada.'));
+            outputReader.onload = () => resolve({
+              dataUrl: outputReader.result,
+              name: file.name,
+              size: blob.size
+            });
+            outputReader.readAsDataURL(blob);
+          }, 'image/jpeg', quality);
+        };
+
+        encode(initialScale, 0.82, 0);
+      };
+      image.src = inputReader.result;
+    };
+    inputReader.readAsDataURL(file);
+  }),
+
   showSuccessCodeModal: (tx) => {
     // Cerrar cualquier otro modal abierto
     ['details-modal', 'register-modal', 'purchase-modal', 'create-session-modal', 'attendees-modal'].forEach(id => {

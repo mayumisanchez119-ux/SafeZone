@@ -6,6 +6,7 @@ const SessionsModule = {
   currentFilter: 'all',
   searchQuery: '',
   singleClassReceiptBase64: null,
+  singleClassReceiptReady: false,
   money: amount => `$${Number(amount || 0).toLocaleString('es-CO')} COP`,
 
   setFilter: (filter) => {
@@ -290,6 +291,7 @@ const SessionsModule = {
     if (!session) return;
 
     SessionsModule.singleClassReceiptBase64 = null;
+    SessionsModule.singleClassReceiptReady = false;
 
     const modal = document.getElementById('register-modal');
     const modalContent = document.getElementById('register-modal-content');
@@ -380,7 +382,7 @@ const SessionsModule = {
               <div class="p-3 rounded-xl bg-slate-900 border-2 border-dashed border-slate-700 hover:border-pink-500 transition-colors text-center relative cursor-pointer">
                 <input type="file" id="single-receipt-file" accept="image/*" onchange="SessionsModule.handleSingleReceiptUpload(event)"
                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-                <div id="single-receipt-msg" class="text-xs text-slate-400">
+              <div id="single-receipt-msg" role="status" aria-live="polite" class="text-xs text-slate-400">
                   <i data-lucide="upload" class="w-4 h-4 text-pink-400 mx-auto mb-1"></i>
                   <span>Haz clic para subir foto del pago de ${SessionsModule.money(session.price)}</span>
                 </div>
@@ -424,19 +426,25 @@ const SessionsModule = {
     }
   },
 
-  handleSingleReceiptUpload: (event) => {
+  handleSingleReceiptUpload: async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      SessionsModule.singleClassReceiptBase64 = e.target.result;
-      const msg = document.getElementById('single-receipt-msg');
-      if (msg) {
-        msg.innerHTML = `<span class="text-emerald-400 font-bold">✅ Comprobante adjuntado (${file.name})</span>`;
-      }
-    };
-    reader.readAsDataURL(file);
+    const msg = document.getElementById('single-receipt-msg');
+    SessionsModule.singleClassReceiptBase64 = null;
+    SessionsModule.singleClassReceiptReady = false;
+    if (msg) msg.innerHTML = '<span class="text-pink-300 font-bold">Preparando comprobante...</span>';
+
+    try {
+      const prepared = await App.prepareReceiptImage(file);
+      SessionsModule.singleClassReceiptBase64 = prepared.dataUrl;
+      SessionsModule.singleClassReceiptReady = true;
+      if (msg) msg.innerHTML = `<span class="text-emerald-400 font-bold">Comprobante listo: ${prepared.name}. Ya puedes confirmar tu reserva.</span>`;
+      App.showToast('Comprobante cargado correctamente. Ya puedes confirmar tu reserva.');
+    } catch (error) {
+      if (msg) msg.innerHTML = `<span class="text-red-400 font-bold">${error.message || 'No fue posible preparar el comprobante.'}</span>`;
+      App.showToast(error.message || 'No fue posible cargar el comprobante.');
+    }
   },
 
   checkCodeAvailability: (sessionId) => {
@@ -543,7 +551,19 @@ const SessionsModule = {
 
       App.showToast(`🎉 ¡Inscripción confirmada con tu código ${code}! Te quedan ${tx.remainingTickets} tickets.`);
     } else {
-      const receiptUrl = SessionsModule.singleClassReceiptBase64 || "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=80&w=600";
+      const receiptFeedback = document.getElementById('single-receipt-msg');
+      if (!SessionsModule.singleClassReceiptReady || !SessionsModule.singleClassReceiptBase64) {
+        if (receiptFeedback) receiptFeedback.innerHTML = '<span class="text-red-400 font-bold">Adjunta el comprobante y espera el mensaje de “Comprobante listo” antes de confirmar.</span>';
+        App.showToast('Falta adjuntar y preparar el comprobante de pago.');
+        return;
+      }
+      const submitButton = event.currentTarget?.querySelector('button[type="submit"]');
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.classList.add('opacity-60', 'cursor-wait');
+        submitButton.querySelector('span').textContent = 'Guardando comprobante...';
+      }
+      const receiptUrl = SessionsModule.singleClassReceiptBase64;
       const randomDigits = Math.floor(10000 + Math.random() * 90000);
       const uniqueCode = "SZ-CL-" + randomDigits;
 
@@ -580,9 +600,20 @@ const SessionsModule = {
         ]
       };
 
-      const allTxs = Storage.getTransactions();
-      allTxs.unshift(newTx);
-      Storage.saveTransactions(allTxs);
+      try {
+        const allTxs = Storage.getTransactions();
+        allTxs.unshift(newTx);
+        Storage.saveTransactions(allTxs);
+      } catch (error) {
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.classList.remove('opacity-60', 'cursor-wait');
+          submitButton.querySelector('span').textContent = 'Confirmar Reserva de Cupo';
+        }
+        if (receiptFeedback) receiptFeedback.innerHTML = '<span class="text-red-400 font-bold">No fue posible guardar el comprobante. Intenta con una captura más pequeña.</span>';
+        App.showToast('No fue posible guardar el comprobante.');
+        return;
+      }
 
       session.attendees = session.attendees || [];
       session.attendees.push({
@@ -598,6 +629,7 @@ const SessionsModule = {
       SessionsModule.closeRegisterModal();
       SessionsModule.renderSessions();
 
+      App.showToast('Pago enviado correctamente. Queda pendiente de aprobación.');
       App.showSuccessCodeModal(newTx);
     }
   }
