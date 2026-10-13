@@ -520,7 +520,7 @@ const InstructorModule = {
                         </div>
                       ` : `
                         <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border border-slate-700 bg-slate-950 shrink-0 flex flex-col items-center justify-center text-center p-2 text-slate-500">
-                          <i data-lucide="clock-3" class="w-5 h-5 mb-1"></i><span class="text-[9px] font-bold leading-tight">Comprobante eliminado<br>tras 30 días</span>
+                          <i data-lucide="clock-3" class="w-5 h-5 mb-1"></i><span class="text-[9px] font-bold leading-tight">Comprobante eliminado<br>tras 15 días</span>
                         </div>
                       `}
 

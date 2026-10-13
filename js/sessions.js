@@ -379,6 +379,7 @@ const SessionsModule = {
 
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1">Adjuntar Foto del Comprobante (${SessionsModule.money(session.price)}) *</label>
+              <p class="text-xs text-slate-400 mb-2">Fotos de hasta 20 MB. La imagen se conservará durante 15 días.</p>
               <div class="p-3 rounded-xl bg-slate-900 border-2 border-dashed border-slate-700 hover:border-pink-500 transition-colors text-center relative cursor-pointer">
                 <input type="file" id="single-receipt-file" accept="image/*" onchange="SessionsModule.handleSingleReceiptUpload(event)"
                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
@@ -502,7 +503,7 @@ const SessionsModule = {
     }
   },
 
-  processRegistration: (event, sessionId) => {
+  processRegistration: async (event, sessionId) => {
     event.preventDefault();
     const sessions = Storage.getSessions();
     const session = sessions.find(s => s.id === sessionId);
@@ -600,17 +601,15 @@ const SessionsModule = {
       };
 
       try {
-        const allTxs = Storage.getTransactions();
-        allTxs.unshift(newTx);
-        Storage.saveTransactions(allTxs);
+        await Storage.savePaymentTransaction(newTx);
       } catch (error) {
         if (submitButton) {
           submitButton.disabled = false;
           submitButton.classList.remove('opacity-60', 'cursor-wait');
           submitButton.querySelector('span').textContent = 'Confirmar Reserva de Cupo';
         }
-        if (receiptFeedback) receiptFeedback.innerHTML = '<span class="text-red-400 font-bold">No fue posible guardar el comprobante. Intenta con una captura más pequeña.</span>';
-        App.showToast('No fue posible guardar el comprobante.');
+        if (receiptFeedback) receiptFeedback.textContent = error.message;
+        App.showToast(error.message);
         return;
       }
 

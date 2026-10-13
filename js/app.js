@@ -120,9 +120,13 @@ const App = {
   // Los comprobantes llegan desde teléfonos y a menudo pesan varios megabytes.
   // Reducirlos antes de guardarlos evita que el almacenamiento del navegador se
   // llene y que el botón de confirmación parezca no hacer nada.
-  prepareReceiptImage: (file, maxBytes = 350 * 1024) => new Promise((resolve, reject) => {
+  prepareReceiptImage: (file, maxBytes = 1024 * 1024) => new Promise((resolve, reject) => {
     if (!file || !String(file.type || '').startsWith('image/')) {
       reject(new Error('Selecciona una imagen válida del comprobante.'));
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      reject(new Error('Puedes adjuntar fotos de hasta 20 MB.'));
       return;
     }
 
@@ -132,7 +136,7 @@ const App = {
       const image = new Image();
       image.onerror = () => reject(new Error('No fue posible procesar esta imagen. Intenta con una foto JPG o PNG.'));
       image.onload = () => {
-        const maxDimension = 1440;
+        const maxDimension = 2000;
         const initialScale = Math.min(1, maxDimension / Math.max(image.width, image.height));
         const canvas = document.createElement('canvas');
 

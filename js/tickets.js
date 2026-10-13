@@ -199,6 +199,7 @@ const TicketsModule = {
 
           <div>
             <label class="block text-xs font-semibold text-slate-300 mb-1.5">Foto / Captura del Comprobante de Pago *</label>
+            <p class="text-xs text-slate-400 mb-2">Fotos de hasta 20 MB. La imagen se conservará durante 15 días.</p>
             <div class="p-4 rounded-2xl bg-slate-950 border-2 border-dashed border-pink-500/40 hover:border-pink-500 transition-colors text-center relative cursor-pointer group">
               <input type="file" id="receipt-file-input" accept="image/*" onchange="TicketsModule.handleReceiptUpload(event)" 
                 class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
@@ -270,7 +271,7 @@ const TicketsModule = {
     }
   },
 
-  processPurchase: (event, comboId) => {
+  processPurchase: async (event, comboId) => {
     event.preventDefault();
     const combos = Storage.getCombos(); const instructors = Storage.getInstructors();
     const combo = combos.find(c => c.id === comboId);
@@ -326,11 +327,14 @@ const TicketsModule = {
     };
 
     try {
-      const transactions = Storage.getTransactions();
-      transactions.unshift(newTx);
-      Storage.saveTransactions(transactions);
+      const submitButton = event.currentTarget?.querySelector('button[type="submit"]');
+      if (submitButton?.disabled) return;
+      if (submitButton) submitButton.disabled = true;
+      await Storage.savePaymentTransaction(newTx);
     } catch (error) {
-      App.showToast('No fue posible guardar el comprobante. Intenta con una captura más pequeña.');
+      const submitButton = document.querySelector('#purchase-modal button[type="submit"]');
+      if (submitButton) submitButton.disabled = false;
+      App.showToast(error.message);
       return;
     }
 
@@ -583,7 +587,7 @@ const TicketsModule = {
                 </div>
               ` : `
                 <div class="h-36 rounded-xl border border-dashed border-slate-700 bg-slate-950 flex flex-col items-center justify-center text-center p-4 text-slate-500">
-                  <i data-lucide="clock-3" class="w-6 h-6 mb-2"></i><span class="text-xs font-semibold">Comprobante eliminado automáticamente tras 30 días.</span>
+                  <i data-lucide="clock-3" class="w-6 h-6 mb-2"></i><span class="text-xs font-semibold">Comprobante eliminado automáticamente tras 15 días.</span>
                 </div>
               `}
             </div>

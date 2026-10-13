@@ -210,23 +210,32 @@ const DEFAULT_TRANSACTIONS = [
 ];
 
 const Storage = {
-  receiptRetentionDays: 30,
+  receiptRetentionDays: 15,
   receiptExpiry: (transaction) => {
-    if (transaction.receiptExpiresAt) return new Date(transaction.receiptExpiresAt).getTime();
     const createdAt = new Date(transaction.createdAt || 0).getTime();
-    return Number.isFinite(createdAt) ? createdAt + Storage.receiptRetentionDays * 24 * 60 * 60 * 1000 : 0;
+    const policyExpiry = Number.isFinite(createdAt) && createdAt > 0
+      ? createdAt + Storage.receiptRetentionDays * 24 * 60 * 60 * 1000 : 0;
+    const savedExpiry = new Date(transaction.receiptExpiresAt || '').getTime();
+    return policyExpiry && Number.isFinite(savedExpiry) ? Math.min(policyExpiry, savedExpiry)
+      : policyExpiry || (Number.isFinite(savedExpiry) ? savedExpiry : 0);
   },
   cleanupExpiredReceipts: (transactions) => {
     const now = Date.now(); let changed = false;
     const cleaned = transactions.map(transaction => {
       const expiresAt = Storage.receiptExpiry(transaction);
-      if (!transaction.receiptUrl || !expiresAt || expiresAt > now) return transaction;
+      if ((!transaction.receiptUrl && !transaction.receiptStorageKey) || !expiresAt) return transaction;
+      if (expiresAt > now) {
+        const receiptExpiresAt = new Date(expiresAt).toISOString();
+        if (transaction.receiptExpiresAt === receiptExpiresAt) return transaction;
+        changed = true;
+        return { ...transaction, receiptExpiresAt };
+      }
       changed = true;
       const history = Array.isArray(transaction.history) ? [...transaction.history] : [];
       if (!history.some(item => item.action === 'Comprobante eliminado automáticamente')) {
-        history.push({ action: 'Comprobante eliminado automáticamente', detail: 'La imagen del comprobante se eliminó tras 30 días de conservación.', date: new Date().toISOString() });
+        history.push({ action: 'Comprobante eliminado automáticamente', detail: 'La imagen del comprobante se eliminó tras 15 días de conservación.', date: new Date().toISOString() });
       }
-      return { ...transaction, receiptUrl: null, receiptRemovedAt: new Date().toISOString(), receiptExpiresAt: new Date(expiresAt).toISOString(), history };
+      return { ...transaction, receiptUrl: null, receiptStorageKey: null, receiptRemovedAt: new Date().toISOString(), receiptExpiresAt: new Date(expiresAt).toISOString(), history };
     });
     if (changed) localStorage.setItem('safezone_transactions', JSON.stringify(cleaned));
     return cleaned;
