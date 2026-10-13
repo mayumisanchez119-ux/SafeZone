@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SAFE ZONE CLUB | Defensa Personal, Boxeo & Taekwondo</title>
+  <title>SAFE ZONE CLUB | Boxeo, Taekwondo & Hapkido</title>
   <link rel="icon" type="image/png" href="assets/logo.png">
 
   <!-- Tailwind CSS CDN -->
@@ -196,13 +196,13 @@
               <div class="mt-2">
                 <span class="text-xs uppercase font-extrabold text-pink-400 tracking-widest">COMUNIDAD MARCIAL OFICIAL</span>
                 <h3 class="text-2xl font-black text-white font-heading mt-1">SAFE ZONE CLUB</h3>
-                <p class="text-xs text-slate-300 mt-1">Seguridad personal, acondicionamiento y disciplina técnica para todos los niveles.</p>
+                <p class="text-xs text-slate-300 mt-1">Entrena fuerte y vive segura.</p>
               </div>
 
               <!-- Mini Stats -->
               <div class="grid grid-cols-3 gap-2 w-full mt-5 pt-4 border-t border-slate-800 text-center">
                 <div class="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
-                  <span class="text-pink-400 font-extrabold text-base block font-heading">4</span>
+                  <span class="text-pink-400 font-extrabold text-base block font-heading">3</span>
                   <span class="text-[10px] text-slate-400 uppercase">Disciplinas</span>
                 </div>
                 <div class="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
@@ -244,9 +244,9 @@
             class="filter-btn px-4 py-2 rounded-xl bg-slate-900 text-slate-300 hover:bg-slate-800 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
             🥋 Taekwondo
           </button>
-          <button onclick="SessionsModule.setFilter('defensa-personal')" data-filter="defensa-personal" 
+          <button onclick="SessionsModule.setFilter('hapkido')" data-filter="hapkido" 
             class="filter-btn px-4 py-2 rounded-xl bg-slate-900 text-slate-300 hover:bg-slate-800 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
-            🛡️ Defensa Personal
+            🥋 Hapkido
           </button>
         </div>
 
@@ -310,9 +310,7 @@
           class="combo-filter-btn px-4 py-2 rounded-xl bg-slate-900 text-slate-300 hover:bg-slate-800 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
           🥋 Solo Taekwondo
         </button>
-        <button onclick="TicketsModule.setComboFilter('defensa-personal')" data-combo-filter="defensa-personal" 
-          class="combo-filter-btn px-4 py-2 rounded-xl bg-slate-900 text-slate-300 hover:bg-slate-800 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
-          🛡️ Solo Defensa Personal</button><button onclick="TicketsModule.setComboFilter('hapkido')" data-combo-filter="hapkido" class="combo-filter-btn px-4 py-2 rounded-xl bg-slate-900 text-slate-300 hover:bg-slate-800 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">🥋 Solo Hapkido
+        <button onclick="TicketsModule.setComboFilter('hapkido')" data-combo-filter="hapkido" class="combo-filter-btn px-4 py-2 rounded-xl bg-slate-900 text-slate-300 hover:bg-slate-800 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">🥋 Solo Hapkido
         </button>
       </div>
 
@@ -428,17 +426,16 @@
             </div>
           </div>
           <p class="text-slate-400 text-xs leading-relaxed max-w-md">
-            Comunidad orientada al entrenamiento en Defensa Personal Urbana, Boxeo y Taekwondo. Sesiones prácticas al aire libre y en sedes deportivas con instructores calificados.
+            Comunidad de mujeres en Bogotá. Entrenamos Boxeo, Taekwondo y Hapkido con instructores certificados.
           </p>
         </div>
 
         <div>
           <h4 class="text-white font-bold text-xs uppercase tracking-wider mb-3">Disciplinas</h4>
           <ul class="space-y-2 text-xs text-slate-400">
-            <li><a href="#" onclick="SessionsModule.setFilter('defensa-personal'); App.switchTab('sessions');" class="hover:text-pink-400 transition-colors">🛡️ Defensa Personal Urbana</a></li>
             <li><a href="#" onclick="SessionsModule.setFilter('boxeo'); App.switchTab('sessions');" class="hover:text-rose-400 transition-colors">🥊 Boxeo Olímpico</a></li>
             <li><a href="#" onclick="SessionsModule.setFilter('taekwondo'); App.switchTab('sessions');" class="hover:text-purple-400 transition-colors">🥋 Taekwondo WT</a></li>
-            <li><a href="#" onclick="SessionsModule.setFilter('hapkido'); App.switchTab('sessions');" class="hover:text-pink-400 transition-colors">🥋 Hapkido</a></li>
+            <li><a href="#" onclick="SessionsModule.setFilter('hapkido'); App.switchTab('sessions');" class="hover:text-fuchsia-400 transition-colors">🥋 Hapkido</a></li>
           </ul>
         </div>
 
@@ -468,7 +465,7 @@
   <script src="js/instructor.js?v=20261012.4"></script>
   <script src="js/teacher-portal.js?v=20261012.3"></script>
   <script src="js/access-portal.js?v=20261012.3"></script>
-  <script src="js/gallery.js?v=20261012.2"></script>
+  <script src="js/gallery.js?v=20261012.3"></script>
   <script src="js/app.js?v=20261012.4"></script>
 <script src="js/safezone-sync.js?v=20261012.2"></script><script src="js/safezone-save-fix.js?v=20260917.1"></script>
 <script src="js/ratings.js?v=20260908.7"></script>
