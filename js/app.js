@@ -191,7 +191,11 @@ const App = {
     const isSingleClass = tx.type === 'single_class' || tx.sessionId || tx.totalTickets === 1;
 
     content.innerHTML = `
-      <div class="p-6 sm:p-8 text-center max-h-[90vh] overflow-y-auto">
+      <div class="relative p-6 sm:p-8 text-center max-h-[90vh] overflow-y-auto">
+        <button type="button" onclick="App.closeSuccessCodeModal()" aria-label="Cerrar confirmación"
+          class="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-pink-500/70 bg-slate-950/90 text-pink-300 shadow-lg shadow-pink-900/40 transition-colors hover:bg-pink-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-pink-300">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
         <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-pink-600 to-rose-600 p-0.5 mx-auto mb-3 shadow-xl shadow-pink-600/50 flex items-center justify-center">
           <div class="w-full h-full bg-slate-950 rounded-[22px] flex items-center justify-center">
             <i data-lucide="check-circle-2" class="w-8 h-8 text-pink-400"></i>
