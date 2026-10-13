@@ -4,6 +4,7 @@
  */
 
 const App = {
+  escapeHtml: value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])),
   currentTab: 'sessions',
 
   init: async () => {
@@ -211,7 +212,7 @@ const App = {
         </span>
         <h3 class="text-2xl sm:text-3xl font-black text-white font-heading mb-1">Comprobante recibido</h3>
         <p class="text-slate-300 text-xs max-w-md mx-auto mb-4">
-          Gracias <strong class="text-white">${tx.studentName}</strong>. Tu comprobante para <strong>${tx.title}</strong> se subió correctamente. El pago debe ser revisado y aprobado por la administradora.
+          Gracias <strong class="text-white">${App.escapeHtml(tx.studentName)}</strong>. Tu comprobante para <strong>${tx.title}</strong> se subió correctamente. El pago debe ser revisado y aprobado por la administradora.
         </p>
 
         <!-- GRAN CAJA DEL CÓDIGO ÚNICO -->

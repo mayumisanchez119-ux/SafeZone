@@ -448,7 +448,7 @@ const SessionsModule = {
     }
   },
 
-  checkCodeAvailability: (sessionId) => {
+  checkCodeAvailability: async (sessionId) => {
     const codeInput = document.getElementById('reg-unique-code');
     const feedback = document.getElementById('code-feedback-msg');
     if (!codeInput || !feedback) return;
@@ -466,7 +466,10 @@ const SessionsModule = {
       return;
     }
 
-    const tx = Storage.findTransactionByCode(code);
+    feedback.textContent = 'Consultando código en la base compartida…';
+    let tx;
+    try { tx = await PaymentSync.lookup(code); }
+    catch (error) { feedback.textContent = error.message; return; }
     if (!tx) {
       feedback.textContent = '❌ Código no encontrado. Verifica si fue bien escrito.';
       feedback.className = 'text-xs text-red-400 font-semibold block';
@@ -516,36 +519,12 @@ const SessionsModule = {
 
     if (isCodeMode) {
       const code = document.getElementById('reg-unique-code').value.trim().toUpperCase();
-      const tx = Storage.findTransactionByCode(code);
-
-      if (!tx || tx.status !== 'approved' || tx.remainingTickets <= 0) {
-        alert('Por favor ingresa un código válido y verificado con saldo de tickets.');
-        return;
-      }
-
-      if (session.isSpecial) { alert('Esta masterclass especial no admite códigos de ticketera.'); return; }
-      if (tx.discipline !== 'all' && tx.discipline !== session.discipline) { alert(`Este código es exclusivo de ${tx.discipline.toUpperCase()} y no puede usarse para una clase de ${session.discipline.toUpperCase()}.`); return; } tx.remainingTickets -= 1;
-      tx.history.push({
-        action: "Redención de Ticket",
-        detail: `Cupo reservado para: ${session.title} (${session.date})`,
-        date: new Date().toISOString()
-      });
-
-      const allTxs = Storage.getTransactions();
-      const txIndex = allTxs.findIndex(t => t.id === tx.id);
-      if (txIndex > -1) allTxs[txIndex] = tx;
-      Storage.saveTransactions(allTxs);
-
-      const attendee = {
-        id: "att-" + Math.random().toString(36).substring(2, 9),
-        name: name,
-        phone: phone,
-        paymentMethod: "ticket",
-        uniqueCode: code,
-        registeredAt: new Date().toISOString()
-      };
-      try { Storage.addSessionAttendee(session.id, attendee); }
-      catch (error) { console.warn('No fue posible guardar el cupo local de la alumna.', error); }
+      const button = event.currentTarget?.querySelector('button[type="submit"]');
+      if (button?.disabled) return;
+      if (button) button.disabled = true;
+      let tx;
+      try { tx = await Storage.redeemTicket(code, session.id, name, phone); }
+      catch (error) { if (button) button.disabled = false; App.showToast(error.message); return; }
       SessionsModule.closeRegisterModal();
       SessionsModule.renderSessions();
 
@@ -558,6 +537,7 @@ const SessionsModule = {
         return;
       }
       const submitButton = event.currentTarget?.querySelector('button[type="submit"]');
+      if (submitButton?.disabled) return;
       if (submitButton) {
         submitButton.disabled = true;
         submitButton.classList.add('opacity-60', 'cursor-wait');
@@ -568,7 +548,7 @@ const SessionsModule = {
       const uniqueCode = "SZ-CL-" + randomDigits;
 
       const newTx = {
-        id: "tx-" + Math.random().toString(36).substring(2, 9),
+        id: PaymentSync.submissionId('class:' + session.id + ':' + name + ':' + phone, receiptUrl),
         uniqueCode: uniqueCode,
         type: session.isSpecial ? "special_class" : "single_class",
         sessionId: session.id,
@@ -601,7 +581,7 @@ const SessionsModule = {
       };
 
       try {
-        await Storage.savePaymentTransaction(newTx);
+        Object.assign(newTx, await Storage.savePaymentTransaction(newTx));
       } catch (error) {
         if (submitButton) {
           submitButton.disabled = false;
@@ -613,16 +593,6 @@ const SessionsModule = {
         return;
       }
 
-      const attendee = {
-        id: "att-" + Math.random().toString(36).substring(2, 9),
-        name: name,
-        phone: phone,
-        paymentMethod: "single_payment",
-        uniqueCode: uniqueCode,
-        registeredAt: new Date().toISOString()
-      };
-      try { Storage.addSessionAttendee(session.id, attendee); }
-      catch (error) { console.warn('El pago quedó registrado, pero no fue posible actualizar el contador local de cupos.', error); }
       SessionsModule.closeRegisterModal();
       SessionsModule.renderSessions();
 

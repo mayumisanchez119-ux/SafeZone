@@ -297,7 +297,7 @@ const TicketsModule = {
     const now = new Date();
 
     const newTx = {
-      id: "tx-" + Math.random().toString(36).substring(2, 9),
+      id: PaymentSync.submissionId('combo:' + combo.id + ':' + name + ':' + phone, receiptUrl),
       uniqueCode: uniqueCode,
       type: "combo",
       comboId: combo.id,
@@ -330,7 +330,7 @@ const TicketsModule = {
       const submitButton = event.currentTarget?.querySelector('button[type="submit"]');
       if (submitButton?.disabled) return;
       if (submitButton) submitButton.disabled = true;
-      await Storage.savePaymentTransaction(newTx);
+      Object.assign(newTx, await Storage.savePaymentTransaction(newTx));
     } catch (error) {
       const submitButton = document.querySelector('#purchase-modal button[type="submit"]');
       if (submitButton) submitButton.disabled = false;
@@ -338,7 +338,8 @@ const TicketsModule = {
       return;
     }
 
-    localStorage.setItem('safezone_last_searched_code', uniqueCode);
+    try { localStorage.setItem('safezone_last_searched_code', newTx.uniqueCode); } catch (_) { /* El pago ya está guardado en Supabase. */ }
+    TicketsModule.queriedCode = newTx.uniqueCode;
 
     TicketsModule.closePurchaseModal();
     App.showToast('Pago enviado correctamente. Queda pendiente de aprobación.');
@@ -383,19 +384,23 @@ const TicketsModule = {
     }
   },
 
-  searchCode: (event) => {
+  searchCode: async (event) => {
     if (event) event.preventDefault();
     const input = document.getElementById('wallet-search-code-input');
     if (!input) return;
-    TicketsModule.queriedCode = input.value.trim();
-    TicketsModule.renderWallet();
+    const code = input.value.trim().toUpperCase();
+    try {
+      await PaymentSync.lookup(code);
+      TicketsModule.queriedCode = code;
+      TicketsModule.renderWallet();
+    } catch (error) { App.showToast(error.message); }
   },
 
   renderWallet: () => {
     const container = document.getElementById('wallet-container');
     if (!container) return;
 
-    const defaultCode = TicketsModule.queriedCode || localStorage.getItem('safezone_last_searched_code') || 'SZ-88210';
+    const defaultCode = TicketsModule.queriedCode || '';
     const tx = Storage.findTransactionByCode(defaultCode);
     const isSingleClass = Boolean(tx && (tx.type === 'single_class' || tx.sessionId || tx.totalTickets === 1));
 
@@ -471,7 +476,7 @@ const TicketsModule = {
                     `}
                   </div>
                   <h3 class="text-2xl font-black text-white font-heading">${tx.title}</h3>
-                  <p class="text-xs text-slate-300 mt-0.5">Alumna: <strong class="text-white font-semibold">${tx.studentName}</strong> (📱 ${tx.studentPhone})</p>
+                  <p class="text-xs text-slate-300 mt-0.5">Alumna: <strong class="text-white font-semibold">${App.escapeHtml(tx.studentName)}</strong> (📱 ${App.escapeHtml(tx.studentPhone)})</p>
                 </div>
 
                 <div class="text-right shrink-0">
@@ -600,10 +605,10 @@ const TicketsModule = {
                 ${tx.history && tx.history.length > 0 ? tx.history.map(h => `
                   <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
                     <div class="flex items-center justify-between">
-                      <span class="font-bold text-pink-300 text-xs">${h.action}</span>
+                      <span class="font-bold text-pink-300 text-xs">${App.escapeHtml(h.action)}</span>
                       <span class="text-[10px] text-slate-500">${new Date(h.date).toLocaleDateString('es-CO')}</span>
                     </div>
-                    <p class="text-slate-400 text-[11px] mt-0.5">${h.detail}</p>
+                    <p class="text-slate-400 text-[11px] mt-0.5">${App.escapeHtml(h.detail)}</p>
                   </div>
                 `).join('') : `
                   <p class="text-slate-500 text-xs">Sin movimientos registrados.</p>

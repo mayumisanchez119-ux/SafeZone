@@ -11,10 +11,12 @@ const ReceiptStore = (() => {
 
   const open = () => new Promise((resolve, reject) => {
     const request = indexedDB.open('safezone_receipts', 1);
+    let expired = false;
+    const timeout = setTimeout(() => { expired = true; reject(new Error('El almacén antiguo está ocupado. Cierra otras pestañas y vuelve a recuperar los datos.')); }, 8000);
     request.onupgradeneeded = () => request.result.createObjectStore('receipts', { keyPath: 'id' });
-    request.onsuccess = () => { database = request.result; resolve(); };
-    request.onerror = () => reject(request.error);
-    request.onblocked = () => reject(new Error('Cierra las otras pestañas de Safe Zone e inténtalo de nuevo.'));
+    request.onsuccess = () => { clearTimeout(timeout); if (expired) { request.result.close(); return; } database = request.result; resolve(); };
+    request.onerror = () => { clearTimeout(timeout); reject(request.error); };
+    request.onblocked = () => { clearTimeout(timeout); expired = true; reject(new Error('Cierra las otras pestañas de Safe Zone e inténtalo de nuevo.')); };
   });
   const operation = (mode, action) => new Promise((resolve, reject) => {
     const transaction = database.transaction('receipts', mode);
@@ -108,7 +110,7 @@ const ReceiptStore = (() => {
   };
   const previousInitialize = Storage.initialize.bind(Storage);
   Storage.initialize = async () => {
-    try { await initialize(); }
+    try { if (localStorage.getItem('safezone_transactions')) await initialize(); }
     catch (error) { console.warn('No se pudo preparar el almacenamiento de comprobantes.', error); }
     return previousInitialize();
   };

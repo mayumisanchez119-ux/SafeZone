@@ -80,9 +80,11 @@ const InstructorModule = {
   },
 
   // --- APROBACIÓN Y RECHAZO DE PAGOS ---
-  approveTransaction: (txId) => {
+  approveTransaction: async (txId) => {
     if (!InstructorModule.isAuthenticated()) return;
-    const ok = Storage.updateTransactionStatus(txId, 'approved');
+    let ok;
+    try { ok = await Storage.updateTransactionStatus(txId, 'approved'); }
+    catch (error) { App.showToast(error.message); return; }
     if (ok) {
       App.showToast('✅ ¡Pago Aprobado! El código único y los tickets han sido activados.');
       InstructorModule.renderInstructorPortal();
@@ -91,12 +93,14 @@ const InstructorModule = {
     }
   },
 
-  rejectTransaction: (txId) => {
+  rejectTransaction: async (txId) => {
     if (!InstructorModule.isAuthenticated()) return;
     const reason = prompt('Indica el motivo del rechazo (ej: No figura en extracto, valor incompleto):', 'Comprobante no recibido en cuenta.');
     if (reason === null) return;
 
-    const ok = Storage.updateTransactionStatus(txId, 'rejected', reason);
+    let ok;
+    try { ok = await Storage.updateTransactionStatus(txId, 'rejected', reason); }
+    catch (error) { App.showToast(error.message); return; }
     if (ok) {
       App.showToast('❌ Transacción marcada como rechazada.');
       InstructorModule.renderInstructorPortal();
@@ -104,13 +108,16 @@ const InstructorModule = {
     }
   },
 
-  deleteTransaction: (txId) => {
+  deleteTransaction: async (txId) => {
     if (!InstructorModule.isAuthenticated()) return;
     const tx = Storage.getTransactions().find(item => item.id === txId);
     if (!tx) return;
     const confirmed = window.confirm(`¿Eliminar el registro ${tx.uniqueCode} de ${tx.studentName}?\n\nEsta acción elimina el comprobante y el código de esta pantalla. Úsala solo si el pago fue cargado por error.`);
     if (!confirmed) return;
-    if (!Storage.deleteTransaction(txId)) {
+    let deleted;
+    try { deleted = await Storage.deleteTransaction(txId); }
+    catch (error) { App.showToast(error.message); return; }
+    if (!deleted) {
       App.showToast('No fue posible eliminar ese registro. Inténtalo de nuevo.');
       return;
     }
@@ -502,7 +509,7 @@ const InstructorModule = {
               const isPending = tx.status === 'pending';
               const isApproved = tx.status === 'approved';
               const isRejected = tx.status === 'rejected';
-              const receiptAvailable = Boolean(tx.receiptUrl);
+              const receiptAvailable = Boolean(tx.hasReceipt || tx.receiptUrl);
               const receiptExpiry = tx.receiptExpiresAt ? new Date(tx.receiptExpiresAt).toLocaleDateString('es-CO') : '';
 
               return `
@@ -512,8 +519,8 @@ const InstructorModule = {
                     <div class="flex items-start gap-4">
                       ${receiptAvailable ? `
                         <div class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-pink-500/50 bg-slate-950 shrink-0 cursor-pointer group"
-                          onclick="InstructorModule.openReceiptModal('${tx.receiptUrl}', '${tx.uniqueCode}')" title="Clic para ver foto del comprobante en grande">
-                          <img src="${tx.receiptUrl}" alt="Comprobante" class="w-full h-full object-cover group-hover:scale-110 transition-transform">
+                          onclick="InstructorModule.openCloudReceipt('${tx.id}', '${tx.uniqueCode}')" title="Clic para ver foto del comprobante en grande">
+                          <div class="w-full h-full flex flex-col items-center justify-center text-pink-300 text-xs gap-2"><i data-lucide="image" class="w-7 h-7"></i>Ver comprobante</div>
                           <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold">
                             <i data-lucide="zoom-in" class="w-4 h-4"></i>
                           </div>
@@ -551,10 +558,10 @@ const InstructorModule = {
                           `}
                         </div>
 
-                        <h4 class="text-base font-bold text-white font-heading">${tx.studentName}</h4>
+                        <h4 class="text-base font-bold text-white font-heading">${App.escapeHtml(tx.studentName)}</h4>
                         
                         <div class="text-xs text-slate-300 flex flex-wrap items-center gap-x-3 gap-y-1">
-                          <span>📱 Tel: <strong>${tx.studentPhone}</strong></span>
+                          <span>📱 Tel: <strong>${App.escapeHtml(tx.studentPhone)}</strong></span>
                           <span>•</span>
                           <span>📦 ${tx.type === 'single_class' ? 'Clase' : 'Paquete'}: <strong>${tx.title}</strong></span>
                           ${tx.sessionDate ? `<span>•</span><span>📅 <strong>${tx.sessionDate} (${tx.sessionTime || ''})</strong></span>` : ''}
@@ -597,7 +604,7 @@ const InstructorModule = {
                         </button>
                       `}
 
-                      ${receiptAvailable ? `<button onclick="InstructorModule.openReceiptModal('${tx.receiptUrl}', '${tx.uniqueCode}')"
+                      ${receiptAvailable ? `<button onclick="InstructorModule.openCloudReceipt('${tx.id}', '${tx.uniqueCode}')"
                         class="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs transition-colors cursor-pointer" title="Ver foto del comprobante">
                         <i data-lucide="image" class="w-4 h-4 text-pink-400"></i>
                       </button>` : ''}
@@ -1867,8 +1874,8 @@ const InstructorModule = {
                 <div class="flex items-center gap-3">
                   <span class="w-6 h-6 rounded-full bg-slate-900 text-slate-400 font-bold text-xs flex items-center justify-center border border-slate-800">${idx + 1}</span>
                   <div>
-                    <span class="text-sm font-bold text-white block">${att.name}</span>
-                    <span class="text-xs text-slate-400">📱 ${att.phone} • Código: <code class="text-pink-400 font-mono font-bold">${att.uniqueCode || 'SZ-TICKET'}</code></span>
+                    <span class="text-sm font-bold text-white block">${App.escapeHtml(att.name)}</span>
+                    <span class="text-xs text-slate-400">📱 ${App.escapeHtml(att.phone)} • Código: <code class="text-pink-400 font-mono font-bold">${App.escapeHtml(att.uniqueCode || 'SZ-TICKET')}</code></span>
                   </div>
                 </div>
 
