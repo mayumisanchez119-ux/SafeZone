@@ -47,6 +47,47 @@ const SafeZoneCloud = {
     return response.json();
   },
 
+  storagePath(path) {
+    return String(path).split('/').map(segment => encodeURIComponent(segment)).join('/');
+  },
+
+  publicGalleryUrl(path) {
+    return `${SafeZoneCloud.url}/storage/v1/object/public/safezone-gallery/${SafeZoneCloud.storagePath(path)}`;
+  },
+
+  async uploadGalleryImage(blob, path, accessToken) {
+    const response = await fetch(
+      `${SafeZoneCloud.url}/storage/v1/object/safezone-gallery/${SafeZoneCloud.storagePath(path)}`,
+      {
+        method: 'POST',
+        headers: {
+          apikey: SafeZoneCloud.key,
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'image/jpeg',
+          'Cache-Control': 'public, max-age=31536000, immutable',
+          'x-upsert': 'false'
+        },
+        body: blob
+      }
+    );
+    if (!response.ok) throw new Error(`No fue posible subir la foto (${response.status}).`);
+    return SafeZoneCloud.publicGalleryUrl(path);
+  },
+
+  async removeGalleryImage(path, accessToken) {
+    if (!path) return;
+    const response = await fetch(`${SafeZoneCloud.url}/storage/v1/object/safezone-gallery`, {
+      method: 'DELETE',
+      headers: {
+        apikey: SafeZoneCloud.key,
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ prefixes: [path] })
+    });
+    if (!response.ok) throw new Error(`No fue posible eliminar la foto (${response.status}).`);
+  },
+
   async saveCombos(items, accessToken) {
     const response = await fetch(
       `${SafeZoneCloud.url}/rest/v1/safezone_content?on_conflict=content_key`,

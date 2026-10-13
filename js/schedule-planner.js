@@ -81,13 +81,14 @@ const SchedulePlanner = {
     if(!instructor) return;
     const input='w-full mt-1 px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm';
     const label='text-xs text-slate-300 block';
+    const regularDiscipline=['boxeo','taekwondo','hapkido'].includes(instructor.discipline) ? instructor.discipline : 'boxeo';
     document.getElementById('details-modal-content').innerHTML=`<div class="p-6 sm:p-8 max-h-[85vh] overflow-y-auto"><div class="flex items-center justify-between mb-5"><div><h2 class="text-xl font-bold text-white">Programar clase</h2><p class="text-xs text-slate-400 mt-1">Elige una clase habitual o una masterclass especial.</p></div><button type="button" aria-label="Cerrar programación" onclick="SchedulePlanner.close()" class="p-2 text-slate-300">✕</button></div>
       <form onsubmit="SchedulePlanner.submit(event,'${scope}')" class="space-y-4"><label class="${label}">Tipo de clase<select name="class_kind" onchange="SchedulePlanner.toggleSpecialForm(this.value)" class="${input}"><option value="regular">Clase habitual</option><option value="special">✦ Masterclass especial</option></select></label>
       <label class="${label}">Día<input name="date" type="date" required min="${SchedulePlanner.today()}" value="${E(date)}" class="${input}"></label>
       <label class="${label}"><span id="schedule-primary-label">Profesor responsable</span><select name="instructor" required class="${input}">${instructors.map(i=>`<option value="${E(i.id)}" ${i.id===instructor.id?'selected':''}>${E(i.name)}</option>`).join('')}</select></label>
       <label class="${label}">Lugar / sede<input name="location" required minlength="3" maxlength="160" placeholder="Escribe la sede o dirección" list="safezone-venues" class="${input}"><datalist id="safezone-venues"><option value="Parque Simón Bolívar - Sector Templete"><option value="Parque El Virrey - Costado Oriental"><option value="Coliseo El Salitre - Canchas Exteriores"><option value="Sede Safe Zone"></datalist></label>
       <div class="grid grid-cols-2 gap-3"><label class="${label}">Hora de inicio<input name="start" type="time" required value="08:00" class="${input}"></label><label class="${label}">Hora de fin<input name="end" type="time" required value="09:30" class="${input}"></label></div>
-      <div id="regular-class-fields"><label class="${label}">Disciplina<select name="discipline" class="${input}">${[['defensa-personal','Defensa Personal'],['boxeo','Boxeo'],['taekwondo','Taekwondo'],['hapkido','Hapkido']].map(([value,text])=>`<option value="${value}" ${value===instructor.discipline?'selected':''}>${text}</option>`).join('')}</select></label></div>
+      <div id="regular-class-fields" class="space-y-4"><label class="${label}">Disciplina<select name="discipline" class="${input}">${[['boxeo','Boxeo'],['taekwondo','Taekwondo'],['hapkido','Hapkido']].map(([value,text])=>`<option value="${value}" ${value===regularDiscipline?'selected':''}>${text}</option>`).join('')}</select></label><label class="${label}">Título de la clase<input name="regular_title" required maxlength="100" value="Entrenamiento de ${E({boxeo:'Boxeo',taekwondo:'Taekwondo',hapkido:'Hapkido'}[regularDiscipline])}" class="${input}"><span class="block mt-1 text-[10px] text-slate-500">Puedes cambiar este título antes de publicar.</span></label></div>
       <div id="special-class-fields" class="hidden p-4 rounded-2xl border border-amber-500/40 bg-amber-500/5 space-y-3"><div><p class="text-sm font-black text-amber-200">✦ Masterclass especial</p><p class="text-xs text-slate-400 mt-1">Los combos no se usan en estas clases; las alumnas se inscriben con pago individual.</p></div><label class="${label}">Nombre del evento<input name="special_name" maxlength="100" placeholder="Ej.: Masterclass Halloween Safe Zone" class="${input}"></label><label class="${label}">Descripción / motivo<textarea name="special_description" rows="3" maxlength="500" placeholder="Ej.: Encuentro especial de Halloween con técnicas, retos y comunidad." class="${input}"></textarea></label><fieldset><legend class="${label}">Profesores que participan</legend><div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">${instructors.map(i=>`<label class="flex gap-2 items-center rounded-lg bg-slate-950/80 px-3 py-2 text-xs text-slate-200"><input type="checkbox" name="special_instructors" value="${E(i.id)}" checked> ${E(i.name)}</label>`).join('')}</div></fieldset><div class="grid grid-cols-1 sm:grid-cols-3 gap-3"><label class="${label}">Preventa (COP)<input name="presale_price" type="number" min="0" step="1000" placeholder="20000" class="${input}"></label><label class="${label}">Hasta qué fecha<input name="presale_ends_on" type="date" min="${SchedulePlanner.today()}" class="${input}"></label><label class="${label}">Precio regular (COP)<input name="regular_price" type="number" min="0" step="1000" placeholder="30000" class="${input}"></label></div></div>
       <label class="${label}">Cupos<input name="capacity" type="number" min="5" max="100" required value="18" class="${input}"></label><p role="status" id="schedule-feedback" class="text-sm text-pink-200"></p>
       <button type="submit" class="w-full py-3 rounded-xl bg-pink-600 text-white font-bold disabled:opacity-50">Confirmar y publicar clase</button></form></div>`;
@@ -95,8 +96,10 @@ const SchedulePlanner = {
   },
   toggleSpecialForm(kind) {
     const special=kind==='special';
-    document.getElementById('special-class-fields')?.classList.toggle('hidden',!special);
-    document.getElementById('regular-class-fields')?.classList.toggle('hidden',special);
+    const specialFields=document.getElementById('special-class-fields'), regularFields=document.getElementById('regular-class-fields');
+    specialFields?.classList.toggle('hidden',!special); regularFields?.classList.toggle('hidden',special);
+    specialFields?.querySelectorAll('input, textarea, select').forEach(field => { field.disabled=!special; });
+    regularFields?.querySelectorAll('input, textarea, select').forEach(field => { field.disabled=special; });
     const label=document.getElementById('schedule-primary-label');if(label)label.textContent=special?'Profesora coordinadora':'Profesor responsable';
   },
   close() { if(!SchedulePlanner.busy) InstructorModule.closeDetailsModal(); },
@@ -116,7 +119,7 @@ const SchedulePlanner = {
     const row = Storage.getTeacherSchedules().find(item => item.id === id);
     if (!row) { App.showToast('No encontramos esta clase. Actualiza el calendario e inténtalo de nuevo.'); return; }
     const special=SchedulePlanner.isSpecial(row), specialData=SchedulePlanner.specialData(row);
-    const disciplineNames = { 'defensa-personal': 'Defensa Personal', boxeo: 'Boxeo', taekwondo: 'Taekwondo', hapkido: 'Hapkido' };
+    const disciplineNames = { boxeo: 'Boxeo', taekwondo: 'Taekwondo', hapkido: 'Hapkido' };
     const discipline = disciplineNames[row.discipline] || row.discipline || 'Entrenamiento marcial';
     const teacherNames=(specialData.instructors || []).map(item=>item.name).filter(Boolean).join(', ') || row.instructor_name || 'Equipo Safe Zone';
     const priceLines=special ? [
@@ -157,6 +160,7 @@ const SchedulePlanner = {
     if(!/^\d{2}:\d{2}$/.test(data.start_time)||!/^\d{2}:\d{2}$/.test(data.end_time)||data.end_time<=data.start_time) throw new Error('La hora de fin debe ser posterior a la hora de inicio.');
     if(data.location.length<3||data.location.length>160) throw new Error('Escribe un lugar de 3 a 160 caracteres.');
     if(!Number.isInteger(data.capacity)||data.capacity<5||data.capacity>100) throw new Error('Los cupos deben estar entre 5 y 100.');
+    if(data.class_kind!=='special' && (!String(data.title || '').trim() || String(data.title).trim().length>100)) throw new Error('Escribe un título de clase de máximo 100 caracteres.');
     if(data.class_kind==='special') {
       const special=data.special_data || {};
       if(!String(data.title || '').trim()) throw new Error('Escribe el nombre del evento especial.');
@@ -193,7 +197,8 @@ const SchedulePlanner = {
         presale_ends_on:fields.get('presale_ends_on'),
         regular_price:Number(fields.get('regular_price'))
       } : {};
-      const data={class_date:fields.get('date'),start_time:fields.get('start'),end_time:fields.get('end'),location:fields.get('location').trim(),instructor_id:instructor.id,instructor_name:instructor.name,instructor_avatar:instructor.avatar,class_kind:special?'special':'regular',special_data:specialData,discipline:special?'especial':fields.get('discipline'),title:special?fields.get('special_name').trim():`Entrenamiento de ${fields.get('discipline')}`,capacity:Number(fields.get('capacity'))};
+      const regularTitle=String(fields.get('regular_title') || '').trim();
+      const data={class_date:fields.get('date'),start_time:fields.get('start'),end_time:fields.get('end'),location:fields.get('location').trim(),instructor_id:instructor.id,instructor_name:instructor.name,instructor_avatar:instructor.avatar,class_kind:special?'special':'regular',special_data:specialData,discipline:special?'especial':fields.get('discipline'),title:special?fields.get('special_name').trim():regularTitle,capacity:Number(fields.get('capacity'))};
       SchedulePlanner.validate(data);
       const latest=await SafeZoneCloud.fetchTeacherSchedules();
       if(SchedulePlanner.overlaps(data,latest))throw new Error('Este profesor ya tiene una clase que coincide con ese horario. Selecciona otra hora.');

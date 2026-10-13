@@ -502,19 +502,27 @@ const InstructorModule = {
               const isPending = tx.status === 'pending';
               const isApproved = tx.status === 'approved';
               const isRejected = tx.status === 'rejected';
+              const receiptAvailable = Boolean(tx.receiptUrl);
+              const receiptExpiry = tx.receiptExpiresAt ? new Date(tx.receiptExpiresAt).toLocaleDateString('es-CO') : '';
 
               return `
                 <div class="glass-card rounded-2xl p-5 sm:p-6 border ${isPending ? 'border-amber-500/60 bg-amber-950/20 shadow-lg shadow-amber-950/30' : 'border-slate-800'} relative overflow-hidden">
                   <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
                     
                     <div class="flex items-start gap-4">
-                      <div class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-pink-500/50 bg-slate-950 shrink-0 cursor-pointer group"
-                        onclick="InstructorModule.openReceiptModal('${tx.receiptUrl}', '${tx.uniqueCode}')" title="Clic para ver foto del comprobante en grande">
-                        <img src="${tx.receiptUrl}" alt="Comprobante" class="w-full h-full object-cover group-hover:scale-110 transition-transform">
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold">
-                          <i data-lucide="zoom-in" class="w-4 h-4"></i>
+                      ${receiptAvailable ? `
+                        <div class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-pink-500/50 bg-slate-950 shrink-0 cursor-pointer group"
+                          onclick="InstructorModule.openReceiptModal('${tx.receiptUrl}', '${tx.uniqueCode}')" title="Clic para ver foto del comprobante en grande">
+                          <img src="${tx.receiptUrl}" alt="Comprobante" class="w-full h-full object-cover group-hover:scale-110 transition-transform">
+                          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold">
+                            <i data-lucide="zoom-in" class="w-4 h-4"></i>
+                          </div>
                         </div>
-                      </div>
+                      ` : `
+                        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border border-slate-700 bg-slate-950 shrink-0 flex flex-col items-center justify-center text-center p-2 text-slate-500">
+                          <i data-lucide="clock-3" class="w-5 h-5 mb-1"></i><span class="text-[9px] font-bold leading-tight">Comprobante eliminado<br>tras 30 días</span>
+                        </div>
+                      `}
 
                       <div class="space-y-1">
                         <div class="flex flex-wrap items-center gap-2">
@@ -557,7 +565,7 @@ const InstructorModule = {
                         </div>
 
                         <div class="text-[11px] text-slate-500 pt-1">
-                          📅 Fecha de Compra: ${new Date(tx.createdAt).toLocaleString('es-CO')} ${tx.approvedAt ? `• Aprobado: ${new Date(tx.approvedAt).toLocaleDateString('es-CO')}` : ''}
+                          📅 Fecha de Compra: ${new Date(tx.createdAt).toLocaleString('es-CO')} ${tx.approvedAt ? `• Aprobado: ${new Date(tx.approvedAt).toLocaleDateString('es-CO')}` : ''}${receiptExpiry ? ` • Comprobante disponible hasta: ${receiptExpiry}` : ''}
                         </div>
                       </div>
                     </div>
@@ -589,10 +597,10 @@ const InstructorModule = {
                         </button>
                       `}
 
-                      <button onclick="InstructorModule.openReceiptModal('${tx.receiptUrl}', '${tx.uniqueCode}')" 
+                      ${receiptAvailable ? `<button onclick="InstructorModule.openReceiptModal('${tx.receiptUrl}', '${tx.uniqueCode}')"
                         class="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs transition-colors cursor-pointer" title="Ver foto del comprobante">
                         <i data-lucide="image" class="w-4 h-4 text-pink-400"></i>
-                      </button>
+                      </button>` : ''}
                                             <button onclick="InstructorModule.deleteTransaction('${tx.id}')"
                         class="p-2.5 rounded-xl bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 text-xs transition-colors cursor-pointer"
                         title="Eliminar este registro cargado por error">
@@ -641,7 +649,7 @@ const InstructorModule = {
             let scopeLabel = combo.discipline === 'all' ? '🌐 Todas las Disciplinas (Universal)' : 
                              combo.discipline === 'boxeo' ? '🥊 Solo Boxeo' : 
                              combo.discipline === 'taekwondo' ? '🥋 Solo Taekwondo' :
-                             combo.discipline === 'hapkido' ? '🥋 Solo Hapkido' : '🛡️ Solo Defensa Personal';
+                             combo.discipline === 'hapkido' ? '🥋 Solo Hapkido' : 'Solo disciplina anterior';
 
             return `
               <div class="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col justify-between relative overflow-hidden group">
@@ -781,7 +789,7 @@ const InstructorModule = {
                 <option value="all" ${combo.discipline === 'all' ? 'selected' : ''}>🌐 Todas las Disciplinas (Pase Universal)</option>
                 <option value="boxeo" ${combo.discipline === 'boxeo' ? 'selected' : ''}>🥊 Solo Boxeo</option>
                 <option value="taekwondo" ${combo.discipline === 'taekwondo' ? 'selected' : ''}>🥋 Solo Taekwondo</option>
-                <option value="defensa-personal" ${combo.discipline === 'defensa-personal' ? 'selected' : ''}>🛡️ Solo Defensa Personal</option>
+                <option value="hapkido" ${combo.discipline === 'hapkido' ? 'selected' : ''}>🥋 Solo Hapkido</option>
               </select>
             </div>
             <div>
@@ -878,9 +886,9 @@ const InstructorModule = {
     } else if (discipline === 'taekwondo') {
       disciplineLabel = 'Solo Taekwondo WT';
       badgeColor = 'bg-purple-600';
-    } else if (discipline === 'defensa-personal') {
-      disciplineLabel = 'Solo Defensa Personal Urbana';
-      badgeColor = 'bg-pink-600';
+    } else if (discipline === 'hapkido') {
+      disciplineLabel = 'Solo Hapkido';
+      badgeColor = 'bg-fuchsia-600';
     }
 
     const updatedData = {
@@ -956,7 +964,7 @@ const InstructorModule = {
             const badgesHtml = discs.map(d => {
               if (d === 'boxeo') return `<span class="badge-boxeo text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">🥊 Boxeo</span>`;
               if (d === 'taekwondo') return `<span class="badge-taekwondo text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">🥋 Taekwondo</span>`;
-              if (d === 'defensa-personal') return `<span class="badge-defensa text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">🛡️ Defensa Personal</span>`;
+              if (d === 'hapkido') return `<span class="bg-fuchsia-950 text-fuchsia-300 border border-fuchsia-700/60 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">🥋 Hapkido</span>`;
               return `<span class="bg-fuchsia-950 text-fuchsia-300 border border-fuchsia-700/60 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">⚡ ${d}</span>`;
             }).join(' ');
 
@@ -1046,12 +1054,7 @@ const InstructorModule = {
             
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
               <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-pink-500/50 cursor-pointer">
-                <input type="checkbox" name="new-inst-disc" value="defensa-personal" class="rounded text-pink-600 focus:ring-pink-500" checked>
-                <span class="text-slate-200 font-semibold">🛡️ Defensa Personal</span>
-              </label>
-
-              <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-pink-500/50 cursor-pointer">
-                <input type="checkbox" name="new-inst-disc" value="boxeo" class="rounded text-pink-600 focus:ring-pink-500">
+                <input type="checkbox" name="new-inst-disc" value="boxeo" class="rounded text-pink-600 focus:ring-pink-500" checked>
                 <span class="text-slate-200 font-semibold">🥊 Boxeo</span>
               </label>
 
@@ -1059,15 +1062,13 @@ const InstructorModule = {
                 <input type="checkbox" name="new-inst-disc" value="taekwondo" class="rounded text-pink-600 focus:ring-pink-500">
                 <span class="text-slate-200 font-semibold">🥋 Taekwondo</span>
               </label>
+
+              <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-pink-500/50 cursor-pointer">
+                <input type="checkbox" name="new-inst-disc" value="hapkido" class="rounded text-pink-600 focus:ring-pink-500">
+                <span class="text-slate-200 font-semibold">🥋 Hapkido</span>
+              </label>
             </div>
 
-            <div>
-              <label class="block text-[11px] font-semibold text-slate-400 mb-1">
-                ➕ Añadir Otra Disciplina o Especialidad Adicional (Opcional):
-              </label>
-              <input type="text" id="new-inst-custom-discipline" placeholder="Ej: Kickboxing, BJJ, Jiu-Jitsu, Acondicionamiento Físico..." 
-                class="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder-slate-500 focus:border-pink-500 focus:outline-none">
-            </div>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1174,7 +1175,6 @@ const InstructorModule = {
     const title = document.getElementById('new-inst-title').value.trim();
     const experience = document.getElementById('new-inst-experience').value.trim();
     const bio = document.getElementById('new-inst-bio').value.trim();
-    const customDiscipline = document.getElementById('new-inst-custom-discipline').value.trim();
 
     const avatar = InstructorModule.currentInstructorAvatarBase64 || 
                    (document.getElementById('inst-avatar-url-input') ? document.getElementById('inst-avatar-url-input').value.trim() : '') || 
@@ -1182,17 +1182,13 @@ const InstructorModule = {
 
     const checkedBoxes = Array.from(document.querySelectorAll('input[name="new-inst-disc"]:checked')).map(cb => cb.value);
     
-    if (customDiscipline && !checkedBoxes.includes(customDiscipline)) {
-      checkedBoxes.push(customDiscipline);
-    }
-
-    const disciplines = checkedBoxes.length > 0 ? checkedBoxes : ['defensa-personal'];
+    const disciplines = checkedBoxes.length > 0 ? checkedBoxes : ['boxeo'];
     const primaryDiscipline = disciplines[0];
 
     const labels = disciplines.map(d => {
       if (d === 'boxeo') return 'Boxeo';
       if (d === 'taekwondo') return 'Taekwondo WT';
-      if (d === 'defensa-personal') return 'Defensa Personal';
+      if (d === 'hapkido') return 'Hapkido';
       return d;
     });
     const disciplineName = labels.join(' & ');
@@ -1230,12 +1226,9 @@ const InstructorModule = {
     InstructorModule.resetAvatarFraming(inst);
 
     const currentDisciplines = inst.disciplines && inst.disciplines.length > 0 ? inst.disciplines : [inst.discipline];
-    const hasDefensa = currentDisciplines.includes('defensa-personal');
     const hasBoxeo = currentDisciplines.includes('boxeo');
     const hasTaekwondo = currentDisciplines.includes('taekwondo');
-
-    const customDiscs = currentDisciplines.filter(d => !['defensa-personal', 'boxeo', 'taekwondo'].includes(d));
-    const customDiscValue = customDiscs.join(', ');
+    const hasHapkido = currentDisciplines.includes('hapkido');
 
     const modal = document.getElementById('details-modal');
     const modalContent = document.getElementById('details-modal-content');
@@ -1273,11 +1266,6 @@ const InstructorModule = {
             
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
               <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-pink-500/50 cursor-pointer">
-                <input type="checkbox" name="edit-inst-disc" value="defensa-personal" class="rounded text-pink-600 focus:ring-pink-500" ${hasDefensa ? 'checked' : ''}>
-                <span class="text-slate-200 font-semibold">🛡️ Defensa Personal</span>
-              </label>
-
-              <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-pink-500/50 cursor-pointer">
                 <input type="checkbox" name="edit-inst-disc" value="boxeo" class="rounded text-pink-600 focus:ring-pink-500" ${hasBoxeo ? 'checked' : ''}>
                 <span class="text-slate-200 font-semibold">🥊 Boxeo</span>
               </label>
@@ -1286,15 +1274,13 @@ const InstructorModule = {
                 <input type="checkbox" name="edit-inst-disc" value="taekwondo" class="rounded text-pink-600 focus:ring-pink-500" ${hasTaekwondo ? 'checked' : ''}>
                 <span class="text-slate-200 font-semibold">🥋 Taekwondo</span>
               </label>
+
+              <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-pink-500/50 cursor-pointer">
+                <input type="checkbox" name="edit-inst-disc" value="hapkido" class="rounded text-pink-600 focus:ring-pink-500" ${hasHapkido ? 'checked' : ''}>
+                <span class="text-slate-200 font-semibold">🥋 Hapkido</span>
+              </label>
             </div>
 
-            <div>
-              <label class="block text-[11px] font-semibold text-slate-400 mb-1">
-                ➕ Añadir Otra Disciplina o Especialidad Adicional (Opcional):
-              </label>
-              <input type="text" id="edit-inst-custom-discipline" value="${customDiscValue}" placeholder="Ej: Kickboxing, BJJ, Jiu-Jitsu, Acondicionamiento..." 
-                class="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder-slate-500 focus:border-pink-500 focus:outline-none">
-            </div>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1402,7 +1388,6 @@ const InstructorModule = {
     const title = document.getElementById('edit-inst-title').value.trim();
     const experience = document.getElementById('edit-inst-experience').value.trim();
     const bio = document.getElementById('edit-inst-bio').value.trim();
-    const customDiscipline = document.getElementById('edit-inst-custom-discipline').value.trim();
 
     const avatar = InstructorModule.currentInstructorAvatarBase64 || 
                    (document.getElementById('inst-avatar-url-input') ? document.getElementById('inst-avatar-url-input').value.trim() : '') || 
@@ -1410,20 +1395,13 @@ const InstructorModule = {
 
     const checkedBoxes = Array.from(document.querySelectorAll('input[name="edit-inst-disc"]:checked')).map(cb => cb.value);
     
-    if (customDiscipline) {
-      const parts = customDiscipline.split(',').map(s => s.trim()).filter(s => s.length > 0);
-      parts.forEach(p => {
-        if (!checkedBoxes.includes(p)) checkedBoxes.push(p);
-      });
-    }
-
-    const disciplines = checkedBoxes.length > 0 ? checkedBoxes : ['defensa-personal'];
+    const disciplines = checkedBoxes.length > 0 ? checkedBoxes : ['boxeo'];
     const primaryDiscipline = disciplines[0];
 
     const labels = disciplines.map(d => {
       if (d === 'boxeo') return 'Boxeo';
       if (d === 'taekwondo') return 'Taekwondo WT';
-      if (d === 'defensa-personal') return 'Defensa Personal';
+      if (d === 'hapkido') return 'Hapkido';
       return d;
     });
     const disciplineName = labels.join(' & ');
@@ -1671,7 +1649,7 @@ const InstructorModule = {
       const badgesHtml = discs.map(d => {
         if (d === 'boxeo') return `<span class="badge-boxeo text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">🥊 Boxeo</span>`;
         if (d === 'taekwondo') return `<span class="badge-taekwondo text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">🥋 Taekwondo</span>`;
-        if (d === 'defensa-personal') return `<span class="badge-defensa text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">🛡️ Defensa Personal</span>`;
+        if (d === 'hapkido') return `<span class="bg-fuchsia-950 text-fuchsia-300 border border-fuchsia-700/60 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">🥋 Hapkido</span>`;
         return `<span class="bg-fuchsia-950 text-fuchsia-300 border border-fuchsia-700/60 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">⚡ ${d}</span>`;
       }).join(' ');
 
@@ -1751,9 +1729,9 @@ const InstructorModule = {
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1.5">Disciplina *</label>
               <select id="quick-discipline" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:border-pink-500 focus:outline-none">
-                <option value="defensa-personal" ${inst.discipline === 'defensa-personal' ? 'selected' : ''}>🛡️ Defensa Personal</option>
                 <option value="boxeo" ${inst.discipline === 'boxeo' ? 'selected' : ''}>🥊 Boxeo</option>
                 <option value="taekwondo" ${inst.discipline === 'taekwondo' ? 'selected' : ''}>🥋 Taekwondo</option>
+                <option value="hapkido" ${inst.discipline === 'hapkido' ? 'selected' : ''}>🥋 Hapkido</option>
               </select>
             </div>
             <div>

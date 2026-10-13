@@ -29,7 +29,7 @@ const TicketsModule = {
     const container = document.getElementById('combos-container');
     if (!container) return;
 
-    const combos = Storage.getCombos(); const instructors = Storage.getInstructors();
+    const combos = Storage.getCombos().filter(combo => ['all', 'boxeo', 'taekwondo', 'hapkido'].includes(combo.discipline)); const instructors = Storage.getInstructors();
     
     const filtered = combos.filter(combo => {
       if (TicketsModule.currentComboFilter === 'all_types') return true;
@@ -54,9 +54,9 @@ const TicketsModule = {
         scopeBadge = `<span class="bg-purple-950/80 text-purple-300 border border-purple-700/60 text-[10px] font-extrabold px-2.5 py-1 rounded-md flex items-center gap-1">
           <i data-lucide="zap" class="w-3.5 h-3.5"></i> EXCLUSIVO: SOLO TAEKWONDO
         </span>`;
-      } else if (combo.discipline === 'defensa-personal') {
+      } else if (combo.discipline === 'hapkido') {
         scopeBadge = `<span class="bg-fuchsia-950/80 text-fuchsia-300 border border-fuchsia-700/60 text-[10px] font-extrabold px-2.5 py-1 rounded-md flex items-center gap-1">
-          <i data-lucide="shield" class="w-3.5 h-3.5"></i> EXCLUSIVO: SOLO DEFENSA PERSONAL
+          <i data-lucide="hand" class="w-3.5 h-3.5"></i> EXCLUSIVO: SOLO HAPKIDO
         </span>`;
       }
 
@@ -281,7 +281,7 @@ const TicketsModule = {
     let prefix = "SZ-";
     if (combo.discipline === 'boxeo') prefix = "SZ-BX-";
     else if (combo.discipline === 'taekwondo') prefix = "SZ-TK-";
-    else if (combo.discipline === 'defensa-personal') prefix = "SZ-DP-";
+    else if (combo.discipline === 'hapkido') prefix = "SZ-HP-";
     
     const uniqueCode = prefix + randomDigits;
     const now = new Date();
@@ -300,6 +300,7 @@ const TicketsModule = {
       amount: combo.price,
       paymentMethod: paymentMethod,
       receiptUrl: receiptUrl,
+      receiptExpiresAt: new Date(now.getTime() + Storage.receiptRetentionDays * 24 * 60 * 60 * 1000).toISOString(),
       status: "pending",
       createdAt: now.toISOString(),
       approvedAt: null,
@@ -558,12 +559,18 @@ const TicketsModule = {
                 </span>
                 <span class="text-[10px] text-slate-400">${tx.paymentMethod}</span>
               </div>
-              <div class="relative rounded-xl overflow-hidden border border-slate-800 bg-slate-950 cursor-pointer group" onclick="TicketsModule.openReceiptZoomModal('${tx.receiptUrl}', '${tx.uniqueCode}')">
-                <img src="${tx.receiptUrl}" alt="Comprobante" class="w-full h-36 object-cover group-hover:scale-105 transition-transform duration-300">
-                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 text-white text-xs font-bold">
-                  <i data-lucide="maximize-2" class="w-4 h-4"></i> Clic para ampliar foto
+              ${tx.receiptUrl ? `
+                <div class="relative rounded-xl overflow-hidden border border-slate-800 bg-slate-950 cursor-pointer group" onclick="TicketsModule.openReceiptZoomModal('${tx.receiptUrl}', '${tx.uniqueCode}')">
+                  <img src="${tx.receiptUrl}" alt="Comprobante" class="w-full h-36 object-cover group-hover:scale-105 transition-transform duration-300">
+                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 text-white text-xs font-bold">
+                    <i data-lucide="maximize-2" class="w-4 h-4"></i> Clic para ampliar foto
+                  </div>
                 </div>
-              </div>
+              ` : `
+                <div class="h-36 rounded-xl border border-dashed border-slate-700 bg-slate-950 flex flex-col items-center justify-center text-center p-4 text-slate-500">
+                  <i data-lucide="clock-3" class="w-6 h-6 mb-2"></i><span class="text-xs font-semibold">Comprobante eliminado automáticamente tras 30 días.</span>
+                </div>
+              `}
             </div>
 
             <div class="glass-card rounded-2xl p-5 border border-slate-800">

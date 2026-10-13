@@ -1,4 +1,4 @@
-/* Galería pública de encuentros reales. Las fotos se guardan en el contenido Safe Zone. */
+/* Galería pública de encuentros reales. Las fotos viven en Storage, no en la base de datos. */
 const GalleryModule = {
   items: [],
   loadState: 'loading',
@@ -71,7 +71,7 @@ const GalleryModule = {
     return `
       <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <form onsubmit="GalleryModule.publish(event)" class="lg:col-span-2 glass-card rounded-2xl p-5 border border-pink-500/30 space-y-4">
-          <div><span class="text-xs font-black uppercase tracking-wider text-pink-400">Galería pública</span><h3 class="text-xl font-black text-white font-heading mt-1">Publicar fotos de un encuentro</h3><p class="text-xs text-slate-400 mt-1">Elige una fecha y varias fotos: todas quedarán agrupadas bajo el mismo encuentro. Máximo ${GalleryModule.maxItems} fotos visibles.</p></div>
+          <div><span class="text-xs font-black uppercase tracking-wider text-pink-400">Galería pública</span><h3 class="text-xl font-black text-white font-heading mt-1">Publicar fotos de un encuentro</h3><p class="text-xs text-slate-400 mt-1">Elige una fecha y varias fotos: todas quedarán agrupadas bajo el mismo encuentro. Se comprimen antes de subirlas para ahorrar espacio. Máximo ${GalleryModule.maxItems} fotos visibles.</p></div>
           <div><label class="block text-xs font-semibold text-slate-300 mb-1.5">Fecha del encuentro *</label><input id="gallery-date" type="date" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:border-pink-500 focus:outline-none"></div>
           <div><label class="block text-xs font-semibold text-slate-300 mb-1.5">Fotos *</label><input id="gallery-file" type="file" accept="image/png,image/jpeg,image/webp" multiple required onchange="GalleryModule.preview(event)" class="block w-full text-xs text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-pink-600 file:px-3 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-pink-500"><p class="mt-2 text-[11px] text-slate-500">Puedes seleccionar varias imágenes a la vez. Cada una se podrá eliminar individualmente después.</p><div id="gallery-preview" class="hidden mt-3 grid grid-cols-3 gap-2" aria-live="polite"></div></div>
           <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-pink-600 to-rose-600 text-white font-bold text-sm flex items-center justify-center gap-2"><i data-lucide="images" class="w-4 h-4"></i>Publicar fotos</button>
@@ -86,10 +86,17 @@ const GalleryModule = {
     const source = URL.createObjectURL(file);
     try {
       const image = await new Promise((resolve, reject) => { const img = new Image(); img.onload = () => resolve(img); img.onerror = reject; img.src = source; });
-      const scale = Math.min(1, 1280 / Math.max(image.naturalWidth, image.naturalHeight));
-      const canvas = document.createElement('canvas'); canvas.width = Math.max(1, Math.round(image.naturalWidth * scale)); canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-      canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
-      return canvas.toDataURL('image/jpeg', 0.82);
+      const makeBlob = async (maxSize, quality) => {
+        const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
+        const canvas = document.createElement('canvas'); canvas.width = Math.max(1, Math.round(image.naturalWidth * scale)); canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+        canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+        return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+      };
+      let blob = await makeBlob(1280, 0.78);
+      if (blob && blob.size > 900 * 1024) blob = await makeBlob(960, 0.70);
+      if (blob && blob.size > 900 * 1024) blob = await makeBlob(720, 0.64);
+      if (!blob || blob.size > 1024 * 1024) throw new Error('No fue posible comprimir la foto por debajo de 1 MB. Prueba con una imagen más ligera.');
+      return { blob, preview: URL.createObjectURL(blob) };
     } finally { URL.revokeObjectURL(source); }
   },
 
@@ -107,8 +114,9 @@ const GalleryModule = {
       return;
     }
     try {
+      GalleryModule.pendingImages.forEach(item => URL.revokeObjectURL(item.preview));
       GalleryModule.pendingImages = await Promise.all(files.map(file => GalleryModule.compress(file)));
-      preview.innerHTML = GalleryModule.pendingImages.map((image, index) => `<img src="${image}" alt="Vista previa ${index + 1}" class="w-full aspect-square object-cover rounded-lg border border-slate-700">`).join('');
+      preview.innerHTML = GalleryModule.pendingImages.map((image, index) => `<img src="${image.preview}" alt="Vista previa ${index + 1}" class="w-full aspect-square object-cover rounded-lg border border-slate-700">`).join('');
       preview.classList.remove('hidden');
     } catch (error) {
       GalleryModule.pendingImages = [];
@@ -135,15 +143,36 @@ const GalleryModule = {
     if (GalleryModule.items.length + GalleryModule.pendingImages.length > GalleryModule.maxItems) { App.showToast(`⚠️ La galería admite máximo ${GalleryModule.maxItems} fotos. Elimina una para continuar.`); return; }
     const eventTitle = `Encuentro Safe Zone · ${GalleryModule.formatDate(date)}`;
     const now = Date.now();
-    const items = GalleryModule.pendingImages.map((image, index) => ({ id: `gallery-${now}-${index}-${Math.random().toString(36).slice(2, 7)}`, title: eventTitle, eventDate: date, caption: '', image, createdAt: new Date().toISOString() }));
-    try { await GalleryModule.persist([...items, ...GalleryModule.items]); GalleryModule.pendingImages = []; InstructorModule.renderInstructorPortal(); GalleryModule.render(); App.showToast(`✅ ${items.length} foto${items.length === 1 ? '' : 's'} publicada${items.length === 1 ? '' : 's'} en Encuentros Reales.`); }
-    catch (error) { App.showToast(`⚠️ ${error.message || 'No fue posible publicar la foto.'}`); }
+    const uploadedPaths = [];
+    try {
+      const items = [];
+      for (const [index, image] of GalleryModule.pendingImages.entries()) {
+        const id = `gallery-${now}-${index}-${Math.random().toString(36).slice(2, 7)}`;
+        const imagePath = `encuentros/${date}/${id}.jpg`;
+        const publicUrl = await SafeZoneCloud.uploadGalleryImage(image.blob, imagePath, GalleryModule.getAdminToken());
+        uploadedPaths.push(imagePath);
+        items.push({ id, title: eventTitle, eventDate: date, caption: '', image: publicUrl, imagePath, createdAt: new Date().toISOString() });
+      }
+      await GalleryModule.persist([...items, ...GalleryModule.items]);
+      GalleryModule.pendingImages.forEach(item => URL.revokeObjectURL(item.preview));
+      GalleryModule.pendingImages = [];
+      InstructorModule.renderInstructorPortal(); GalleryModule.render();
+      App.showToast(`✅ ${items.length} foto${items.length === 1 ? '' : 's'} publicada${items.length === 1 ? '' : 's'} en Encuentros Reales.`);
+    } catch (error) {
+      await Promise.all(uploadedPaths.map(path => SafeZoneCloud.removeGalleryImage(path, GalleryModule.getAdminToken()).catch(() => null)));
+      App.showToast(`⚠️ ${error.message || 'No fue posible publicar la foto.'}`);
+    }
   },
 
   async remove(id) {
     if (!InstructorModule.isAuthenticated()) return;
     if (!confirm('¿Eliminar esta foto de la galería pública?')) return;
-    try { await GalleryModule.persist(GalleryModule.items.filter(item => item.id !== id)); InstructorModule.renderInstructorPortal(); GalleryModule.render(); App.showToast('🗑️ Foto eliminada de la galería.'); }
+    const item = GalleryModule.items.find(current => current.id === id);
+    try {
+      await GalleryModule.persist(GalleryModule.items.filter(current => current.id !== id));
+      if (item?.imagePath) await SafeZoneCloud.removeGalleryImage(item.imagePath, GalleryModule.getAdminToken());
+      InstructorModule.renderInstructorPortal(); GalleryModule.render(); App.showToast('🗑️ Foto eliminada de la galería.');
+    }
     catch (error) { App.showToast(`⚠️ ${error.message || 'No fue posible eliminar la foto.'}`); }
   }
 };

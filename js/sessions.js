@@ -73,9 +73,9 @@ const SessionsModule = {
       const availableSpots = Math.max(0, session.capacity - attendeesCount);
       const isFull = availableSpots === 0;
 
-      let badgeClass = 'badge-defensa';
-      let disciplineLabel = 'Defensa Personal';
-      let disciplineIcon = 'shield';
+      let badgeClass = 'bg-indigo-950 text-indigo-300 border border-indigo-700/60';
+      let disciplineLabel = 'Hapkido';
+      let disciplineIcon = 'hand';
 
       if (session.isSpecial) {
         badgeClass = 'bg-amber-500/15 text-amber-200 border border-amber-500/50';
@@ -564,6 +564,7 @@ const SessionsModule = {
         amount: session.price || 10000,
         paymentMethod: "Transferencia Individual",
         receiptUrl: receiptUrl,
+        receiptExpiresAt: new Date(Date.now() + Storage.receiptRetentionDays * 24 * 60 * 60 * 1000).toISOString(),
         status: "pending",
         createdAt: new Date().toISOString(),
         approvedAt: null,

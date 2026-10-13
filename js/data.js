@@ -20,8 +20,8 @@ const DEFAULT_INSTRUCTORS = [
     id: "inst-2",
     name: "Mtra. Jin-Woo & Andrea Park",
     discipline: "taekwondo",
-    disciplines: ["taekwondo", "defensa-personal"],
-    disciplineName: "Taekwondo WT & Defensa Personal",
+    disciplines: ["taekwondo"],
+    disciplineName: "Taekwondo WT",
     title: "Cinturón Negro 4to Dan Taekwondo WT",
     experience: "15 años formando atletas y practicantes",
     avatar: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&q=80&w=300",
@@ -32,28 +32,28 @@ const DEFAULT_INSTRUCTORS = [
   {
     id: "inst-3",
     name: "Andrea 'Valkiria' Silva",
-    discipline: "defensa-personal",
-    disciplines: ["defensa-personal", "boxeo"],
-    disciplineName: "Defensa Personal Urbana & Boxeo",
-    title: "Instructora Senior Safe Zone & Combate Urbano",
-    experience: "9 años capacitando en seguridad personal y prevención",
+    discipline: "hapkido",
+    disciplines: ["hapkido", "boxeo"],
+    disciplineName: "Hapkido & Boxeo",
+    title: "Instructora Senior de Hapkido & Boxeo",
+    experience: "9 años de experiencia en artes marciales",
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300",
 
 
-    bio: "Técnicas 100% realistas para neutralizar agresiones callejeras, escapes de agarres, control de distancia y manejo del estrés bajo el método Safe Zone."
+    bio: "Técnicas de Hapkido, control corporal y combinaciones de Boxeo para entrenar con confianza y disciplina."
   },
   {
     id: "inst-4",
     name: "Mateo 'Grappler' Rendón",
-    discipline: "defensa-personal",
-    disciplines: ["defensa-personal"],
-    disciplineName: "Defensa Personal & Grappling",
-    title: "Especialista en Grappling & Control en el Suelo",
-    experience: "8 años en BJJ y Defensa Policial",
+    discipline: "hapkido",
+    disciplines: ["hapkido"],
+    disciplineName: "Hapkido",
+    title: "Instructor de Hapkido",
+    experience: "8 años de experiencia marcial",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300",
 
 
-    bio: "Aprende a neutralizar atacantes de mayor peso mediante palancas, derribos seguros y escapes efectivos desde el piso."
+    bio: "Aprende técnicas de Hapkido, coordinación, movilidad y control corporal en un entorno seguro."
   }
 ];
 
@@ -73,7 +73,7 @@ const DEFAULT_COMBOS = [
     regularPrice: 40000,
     savings: 10000,
     validityDays: 60,
-    description: "¡Pagas 3 y recibes 4! Válido indistintamente para Boxeo, Taekwondo o Defensa Personal en cualquier sede.",
+    description: "¡Pagas 3 y recibes 4! Válido indistintamente para Boxeo, Taekwondo o Hapkido en cualquier sede.",
     features: [
       "4 Tickets válidos para CUALQUIER disciplina",
       "Vigencia extendida de 60 días tras aprobación",
@@ -126,12 +126,12 @@ const DEFAULT_COMBOS = [
     ]
   },
   {
-    id: "combo-defensa-31",
-    title: "Combo Especialista Defensa Personal (3 + 1)",
-    discipline: "defensa-personal",
-    disciplineLabel: "Solo Defensa Personal Urbana",
-    badge: "🛡️ SOLO DEFENSA",
-    badgeColor: "bg-pink-600",
+    id: "combo-hapkido-31",
+    title: "Combo Especialista Hapkido (3 + 1)",
+    discipline: "hapkido",
+    disciplineLabel: "Solo Hapkido",
+    badge: "🥋 SOLO HAPKIDO",
+    badgeColor: "bg-fuchsia-600",
     paidSessions: 3,
     totalTickets: 4,
     freeTickets: 1,
@@ -139,11 +139,11 @@ const DEFAULT_COMBOS = [
     regularPrice: 40000,
     savings: 10000,
     validityDays: 60,
-    description: "Exclusivo para Defensa Personal Urbana y Krav Maga. Desarmes, agarres y escapes reales en la calle.",
+    description: "Exclusivo para entrenamientos de Hapkido. Técnica, movilidad, control corporal y disciplina marcial.",
     features: [
-      "4 Tickets exclusivos para DEFENSA PERSONAL",
+      "4 Tickets exclusivos para HAPKIDO",
       "Vigencia de 60 días para redimir",
-      "Tácticas urbanas y control situacional",
+      "Técnica, movilidad y control corporal",
       "Ahorro de $10.000 COP (1 sesión gratis)"
     ]
   }
@@ -210,6 +210,27 @@ const DEFAULT_TRANSACTIONS = [
 ];
 
 const Storage = {
+  receiptRetentionDays: 30,
+  receiptExpiry: (transaction) => {
+    if (transaction.receiptExpiresAt) return new Date(transaction.receiptExpiresAt).getTime();
+    const createdAt = new Date(transaction.createdAt || 0).getTime();
+    return Number.isFinite(createdAt) ? createdAt + Storage.receiptRetentionDays * 24 * 60 * 60 * 1000 : 0;
+  },
+  cleanupExpiredReceipts: (transactions) => {
+    const now = Date.now(); let changed = false;
+    const cleaned = transactions.map(transaction => {
+      const expiresAt = Storage.receiptExpiry(transaction);
+      if (!transaction.receiptUrl || !expiresAt || expiresAt > now) return transaction;
+      changed = true;
+      const history = Array.isArray(transaction.history) ? [...transaction.history] : [];
+      if (!history.some(item => item.action === 'Comprobante eliminado automáticamente')) {
+        history.push({ action: 'Comprobante eliminado automáticamente', detail: 'La imagen del comprobante se eliminó tras 30 días de conservación.', date: new Date().toISOString() });
+      }
+      return { ...transaction, receiptUrl: null, receiptRemovedAt: new Date().toISOString(), receiptExpiresAt: new Date(expiresAt).toISOString(), history };
+    });
+    if (changed) localStorage.setItem('safezone_transactions', JSON.stringify(cleaned));
+    return cleaned;
+  },
   initialize: async () => {
     try {
       const content = await SafeZoneCloud.fetchContent();
@@ -326,7 +347,7 @@ const Storage = {
     try {
       const parsed = JSON.parse(data);
       // Solo combos 3+1 (<= 4 tickets)
-      const filtered = parsed.filter(c => c.totalTickets <= 4);
+      const filtered = parsed.filter(c => c.totalTickets <= 4 && ['all', 'boxeo', 'taekwondo', 'hapkido'].includes(c.discipline));
       // Una lista vacía puede ser una decisión válida de la administradora.
       // No se deben restaurar combos eliminados automáticamente.
       return filtered;
@@ -350,10 +371,11 @@ const Storage = {
 
   getTransactions: () => {
     const data = localStorage.getItem('safezone_transactions');
-    return data ? JSON.parse(data) : DEFAULT_TRANSACTIONS;
+    const transactions = data ? JSON.parse(data) : DEFAULT_TRANSACTIONS;
+    return Storage.cleanupExpiredReceipts(transactions);
   },
   saveTransactions: (transactions) => {
-    localStorage.setItem('safezone_transactions', JSON.stringify(transactions));
+    localStorage.setItem('safezone_transactions', JSON.stringify(Storage.cleanupExpiredReceipts(transactions)));
   },
   deleteTransaction: (txId) => {
     const transactions = Storage.getTransactions();
