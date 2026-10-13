@@ -199,11 +199,11 @@ const App = {
         </div>
 
         <span class="text-xs uppercase font-black text-pink-400 tracking-widest bg-pink-950/80 px-3 py-1 rounded-full border border-pink-700/60 inline-block mb-2">
-          ${isSingleClass ? '¡PASE DE ENTRADA REGISTRADO!' : '¡TIQUETERA 3+1 REGISTRADA!'}
+          ${isSingleClass ? 'COMPROBANTE ENVIADO' : 'PAGO EN REVISIÓN'}
         </span>
-        <h3 class="text-2xl sm:text-3xl font-black text-white font-heading mb-1">Tu Código Único de Transacción</h3>
+        <h3 class="text-2xl sm:text-3xl font-black text-white font-heading mb-1">Comprobante recibido</h3>
         <p class="text-slate-300 text-xs max-w-md mx-auto mb-4">
-          ¡Gracias <strong class="text-white">${tx.studentName}</strong>! Tu comprobante por <strong>${tx.title}</strong> ha sido recibido.
+          Gracias <strong class="text-white">${tx.studentName}</strong>. Tu comprobante para <strong>${tx.title}</strong> se subió correctamente. El pago debe ser revisado y aprobado por la administradora.
         </p>
 
         <!-- GRAN CAJA DEL CÓDIGO ÚNICO -->
@@ -211,7 +211,7 @@ const App = {
           <div class="absolute -right-10 -bottom-10 w-36 h-36 bg-pink-600/20 rounded-full blur-2xl"></div>
           
           <span class="text-[11px] uppercase font-black text-pink-300 tracking-widest block mb-1">
-            🎟️ CÓDIGO PERSONAL SAFE ZONE:
+            CÓDIGO PERSONAL SAFE ZONE:
           </span>
           
           <div class="text-4xl sm:text-5xl md:text-6xl font-black text-white font-mono tracking-widest my-4 select-all drop-shadow-[0_0_30px_rgba(244,63,94,0.7)]">
@@ -229,7 +229,7 @@ const App = {
 
           <div class="mt-4 flex items-center justify-center gap-2 text-xs text-amber-300 font-semibold bg-amber-950/80 py-1.5 px-4 rounded-full border border-amber-700/60 inline-flex">
             <i data-lucide="clock" class="w-4 h-4"></i>
-            <span>Estado: Pendiente de Aprobación por Administradora</span>
+            <span>Estado: pendiente de aprobación administrativa</span>
           </div>
         </div>
 

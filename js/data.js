@@ -259,6 +259,20 @@ const Storage = {
     localStorage.setItem('safezone_teacher_schedules', JSON.stringify(schedules));
   },
 
+  // Las inscripciones se guardan aparte del catálogo de clases. De ese modo no
+  // se vuelve a duplicar todo el calendario (ni se agota el almacenamiento)
+  // cada vez que una alumna adjunta un comprobante.
+  getSessionAttendees: () => {
+    try { return JSON.parse(localStorage.getItem('safezone_session_attendees') || '{}'); }
+    catch (error) { return {}; }
+  },
+  addSessionAttendee: (sessionId, attendee) => {
+    const attendees = Storage.getSessionAttendees();
+    const current = Array.isArray(attendees[sessionId]) ? attendees[sessionId] : [];
+    attendees[sessionId] = [...current, attendee];
+    localStorage.setItem('safezone_session_attendees', JSON.stringify(attendees));
+  },
+
   getSessions: () => {
     const data = localStorage.getItem('safezone_sessions');
     const sessions = (data ? JSON.parse(data) : DEFAULT_SESSIONS).filter(session => !['ses-1', 'ses-2', 'ses-3'].includes(session.id));
@@ -299,7 +313,11 @@ const Storage = {
       };
     });
     const ids = new Set(teacherSessions.map(session => session.id));
-    return [...teacherSessions, ...sessions.filter(session => !ids.has(session.id))];
+    const attendeeMap = Storage.getSessionAttendees();
+    return [...teacherSessions, ...sessions.filter(session => !ids.has(session.id))].map(session => ({
+      ...session,
+      attendees: Array.isArray(attendeeMap[session.id]) ? attendeeMap[session.id] : (session.attendees || [])
+    }));
   },
   saveSessions: (sessions) => {
     localStorage.setItem('safezone_sessions', JSON.stringify(sessions));

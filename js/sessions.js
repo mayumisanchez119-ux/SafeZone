@@ -535,17 +535,16 @@ const SessionsModule = {
       if (txIndex > -1) allTxs[txIndex] = tx;
       Storage.saveTransactions(allTxs);
 
-      session.attendees = session.attendees || [];
-      session.attendees.push({
+      const attendee = {
         id: "att-" + Math.random().toString(36).substring(2, 9),
         name: name,
         phone: phone,
         paymentMethod: "ticket",
         uniqueCode: code,
         registeredAt: new Date().toISOString()
-      });
-
-      Storage.saveSessions(sessions);
+      };
+      try { Storage.addSessionAttendee(session.id, attendee); }
+      catch (error) { console.warn('No fue posible guardar el cupo local de la alumna.', error); }
       SessionsModule.closeRegisterModal();
       SessionsModule.renderSessions();
 
@@ -615,21 +614,20 @@ const SessionsModule = {
         return;
       }
 
-      session.attendees = session.attendees || [];
-      session.attendees.push({
+      const attendee = {
         id: "att-" + Math.random().toString(36).substring(2, 9),
         name: name,
         phone: phone,
         paymentMethod: "single_payment",
         uniqueCode: uniqueCode,
         registeredAt: new Date().toISOString()
-      });
-
-      Storage.saveSessions(sessions);
+      };
+      try { Storage.addSessionAttendee(session.id, attendee); }
+      catch (error) { console.warn('El pago quedó registrado, pero no fue posible actualizar el contador local de cupos.', error); }
       SessionsModule.closeRegisterModal();
       SessionsModule.renderSessions();
 
-      App.showToast('Pago enviado correctamente. Queda pendiente de aprobación.');
+      App.showToast('Comprobante enviado. El pago queda pendiente de aprobación administrativa.');
       App.showSuccessCodeModal(newTx);
     }
   }
