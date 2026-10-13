@@ -594,7 +594,7 @@ const TicketsModule = {
                 </div>
               ` : `
                 <div class="h-36 rounded-xl border border-dashed border-slate-700 bg-slate-950 flex flex-col items-center justify-center text-center p-4 text-slate-500">
-                  <i data-lucide="clock-3" class="w-6 h-6 mb-2"></i><span class="text-xs font-semibold">Comprobante eliminado automáticamente tras 15 días.</span>
+                  <i data-lucide="shield-check" class="w-6 h-6 mb-2"></i><span class="text-xs font-semibold">${!tx.receiptRemovedAt && new Date(tx.receiptExpiresAt || 0).getTime() > Date.now() ? 'Tu comprobante está guardado de forma privada. Solo la administradora puede ver la imagen para revisar el pago.' : 'La imagen cumplió su conservación de 15 días. El registro del pago y tu código se conservan.'}</span>
                 </div>
               `}
             </div>

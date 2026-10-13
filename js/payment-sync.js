@@ -104,6 +104,7 @@ const PaymentSync = (() => {
       let recoveryError;
       if (recover) { try { await migrate(); } catch (error) { recoveryError = error; } }
       const result = await rpc('admin_payments', {}, true);
+      if (!admin()) return;
       transactions = result.transactions || [];
       attendees = result.attendees || {};
       Storage.getSessions().forEach(item => { if (!attendees[item.id]) attendees[item.id] = []; });
@@ -183,6 +184,16 @@ const PaymentSync = (() => {
     <span role="status">${errorMessage ? App.escapeHtml(errorMessage) : lastAdmin ? 'Pagos guardados en la base compartida · actualización automática' : 'Cargando pagos compartidos…'}</span>
     <button type="button" onclick="PaymentSync.recover()" class="px-3 py-2 rounded-lg border border-pink-500/40 text-pink-300">Actualizar y recuperar datos de este navegador</button></div>` + sheet();
   const receiptModal = InstructorModule.openReceiptModal.bind(InstructorModule);
+  const logout = InstructorModule.logout.bind(InstructorModule);
+  InstructorModule.logout = () => {
+    transactions = [];
+    attendees = {};
+    lastAdmin = 0;
+    errorMessage = '';
+    InstructorModule.closeDetailsModal();
+    logout();
+    refreshCounts().catch(error => console.warn('Contador pendiente de actualización', error));
+  };
   InstructorModule.openCloudReceipt = async (id, code) => {
     try {
       App.showToast('Cargando comprobante privado…');

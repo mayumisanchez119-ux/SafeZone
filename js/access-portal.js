@@ -42,6 +42,7 @@ const AccessPortal = {
     if (AccessPortal.teacherUsers.includes(username)) {
       try {
         const session = await SafeZoneCloud.signInTeacher(password);
+        localStorage.removeItem('safezone_admin_session');
         localStorage.removeItem('safezone_auth_token');
         localStorage.removeItem('safezone_logged_user');
         localStorage.setItem(TeacherPortal.storageKey, JSON.stringify({ access_token: session.access_token, expires_at: session.expires_at }));
