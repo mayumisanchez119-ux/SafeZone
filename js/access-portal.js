@@ -4,6 +4,7 @@ const AccessPortal = {
   teacherUsers: ['profesor', 'profesores'],
 
   render: () => {
+    if (InstructorModule.isAuthenticated()) { App.switchTab('instructor-portal'); return; }
     const container = document.getElementById('access-portal-container');
     if (!container) return;
     container.innerHTML = `

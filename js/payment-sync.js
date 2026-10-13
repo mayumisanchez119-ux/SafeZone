@@ -44,7 +44,7 @@ const PaymentSync = (() => {
   const redraw = () => {
     App.updateWalletBadge();
     if (App.currentTab === 'sessions') SessionsModule.renderSessions();
-    if (App.currentTab === 'wallet') TicketsModule.renderWallet();
+    if (App.currentTab === 'wallet' && document.activeElement?.id !== 'wallet-search-code-input') TicketsModule.renderWallet();
     if (App.currentTab === 'instructor-portal' && ['transactions', 'calendar'].includes(InstructorModule.activeSubTab)) InstructorModule.renderInstructorPortal();
     if (App.currentTab === 'teacher-portal') TeacherPortal.render();
   };

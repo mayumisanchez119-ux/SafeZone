@@ -392,13 +392,15 @@ const TicketsModule = {
     try {
       await PaymentSync.lookup(code);
       TicketsModule.queriedCode = code;
-      TicketsModule.renderWallet();
+      TicketsModule.renderWallet(true);
     } catch (error) { App.showToast(error.message); }
   },
 
-  renderWallet: () => {
+  renderWallet: (force = false) => {
     const container = document.getElementById('wallet-container');
     if (!container) return;
+    const editingInput = document.getElementById('wallet-search-code-input');
+    if (!force && editingInput && (document.activeElement === editingInput || editingInput.value.trim().toUpperCase() !== TicketsModule.queriedCode)) return;
 
     const defaultCode = TicketsModule.queriedCode || '';
     const tx = Storage.findTransactionByCode(defaultCode);
